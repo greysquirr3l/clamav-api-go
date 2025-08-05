@@ -17,31 +17,32 @@ type VersionCommandsResponse struct {
 	Commands []string `json:"commands"`
 }
 
+// VersionCommands handles requests for ClamAV available commands.
 func (h *Handler) VersionCommands(w http.ResponseWriter, r *http.Request) {
 	// Get request id for logging purposes
-	req_id, _ := hlog.IDFromCtx(r.Context())
+	reqID, _ := hlog.IDFromCtx(r.Context())
 
 	ctx := r.Context()
 
 	vcmds, err := h.Clamav.VersionCommands(ctx)
 	if err != nil {
-		h.Logger.Error().Str("req_id", req_id.String()).Msgf("error while sending versioncommands command: %v", err)
+		h.Logger.Error().Str("req_id", reqID.String()).Msgf("error while sending versioncommands command: %v", err)
 
 		SetErrorResponse(w, err)
 		return
 	}
 
-	h.Logger.Debug().Str("req_id", req_id.String()).Msg("versioncommands command sent successfully")
+	h.Logger.Debug().Str("req_id", reqID.String()).Msg("versioncommands command sent successfully")
 
 	v, err := versionCommandsMarshall(string(vcmds))
 	if err != nil {
-		h.Logger.Error().Str("req_id", req_id.String()).Msgf("error while marshalling versioncommands: %v", err)
+		h.Logger.Error().Str("req_id", reqID.String()).Msgf("error while marshalling versioncommands: %v", err)
 
 		SetErrorResponse(w, err)
 		return
 	}
 
-	h.Logger.Debug().Str("req_id", req_id.String()).Msg("versioncommands marshalled successfully")
+	h.Logger.Debug().Str("req_id", reqID.String()).Msg("versioncommands marshalled successfully")
 
 	resp, err := json.Marshal(&v)
 	if err != nil {
@@ -51,7 +52,9 @@ func (h *Handler) VersionCommands(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Content-Type", ContentTypeApplicationJSON)
 	w.WriteHeader(http.StatusOK)
-	w.Write(resp)
+	if _, err := w.Write(resp); err != nil {
+		h.Logger.Error().Str("req_id", reqID.String()).Msgf("failed to write response: %v", err)
+	}
 }
 
 // versionCommandsMarshall will marshall the string v

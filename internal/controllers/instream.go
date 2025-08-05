@@ -20,19 +20,22 @@ type InStreamResponse struct {
 }
 
 var (
-	ErrFormFile        = errors.New("failed to parse file")
+	// ErrFormFile indicates failure to parse file from form data.
+	ErrFormFile = errors.New("failed to parse file")
+	// ErrOpenFileHeaders indicates failure to open multipart file headers.
 	ErrOpenFileHeaders = errors.New("failed to open multipart file headers")
 )
 
+// InStream handles file scanning via multipart upload.
 func (h *Handler) InStream(w http.ResponseWriter, r *http.Request) {
 	// Get request id for logging purposes
-	req_id, _ := hlog.IDFromCtx(r.Context())
+	reqID, _ := hlog.IDFromCtx(r.Context())
 
 	// Parsing the Multipart file
 	_, hd, err := r.FormFile("file")
 	if err != nil {
-		e := fmt.Errorf("%w: %v", ErrFormFile, err)
-		h.Logger.Debug().Str("req_id", req_id.String()).Msgf("%v", e)
+		e := fmt.Errorf("%w: %w", ErrFormFile, err)
+		h.Logger.Debug().Str("req_id", reqID.String()).Msgf("%v", e)
 
 		SetErrorResponse(w, e)
 		return
@@ -40,19 +43,23 @@ func (h *Handler) InStream(w http.ResponseWriter, r *http.Request) {
 
 	f, err := hd.Open()
 	if err != nil {
-		e := fmt.Errorf("%w: %v", ErrOpenFileHeaders, err)
-		h.Logger.Debug().Str("req_id", req_id.String()).Msgf("%v", e)
+		e := fmt.Errorf("%w: %w", ErrOpenFileHeaders, err)
+		h.Logger.Debug().Str("req_id", reqID.String()).Msgf("%v", e)
 
 		SetErrorResponse(w, e)
 		return
 	}
 
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			h.Logger.Error().Str("req_id", reqID.String()).Msgf("failed to close file: %v", err)
+		}
+	}()
 
 	size := hd.Size
 
 	h.Logger.Debug().
-		Str("req_id", req_id.String()).
+		Str("req_id", reqID.String()).
 		Str("file_name", hd.Filename).
 		Int64("file_size", hd.Size).
 		Msg("multipart file read successfully")
@@ -63,7 +70,7 @@ func (h *Handler) InStream(w http.ResponseWriter, r *http.Request) {
 	inStream, err := h.Clamav.InStream(ctx, f, size)
 	if err != nil {
 		if errors.Is(err, clamav.ErrVirusFound) {
-			h.Logger.Debug().Str("req_id", req_id.String()).Msg(err.Error())
+			h.Logger.Debug().Str("req_id", reqID.String()).Msg(err.Error())
 
 			inStreamResp = InStreamResponse{
 				Status:     "error",
@@ -72,7 +79,7 @@ func (h *Handler) InStream(w http.ResponseWriter, r *http.Request) {
 				VirusFound: true,
 			}
 		} else {
-			h.Logger.Debug().Str("req_id", req_id.String()).Err(err).Msg("error while scanning file")
+			h.Logger.Debug().Str("req_id", reqID.String()).Err(err).Msg("error while scanning file")
 
 			SetErrorResponse(w, err)
 			return
@@ -86,7 +93,7 @@ func (h *Handler) InStream(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	h.Logger.Debug().Str("req_id", req_id.String()).Msg("file scanned successfully")
+	h.Logger.Debug().Str("req_id", reqID.String()).Msg("file scanned successfully")
 
 	resp, err := json.Marshal(inStreamResp)
 	if err != nil {
@@ -96,7 +103,9 @@ func (h *Handler) InStream(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", ContentTypeApplicationJSON)
 	w.WriteHeader(http.StatusOK)
-	w.Write(resp)
+	if _, err := w.Write(resp); err != nil {
+		h.Logger.Error().Str("req_id", reqID.String()).Msgf("failed to write response: %v", err)
+	}
 }
 
 // parseSignature will extract the name of the virus signature

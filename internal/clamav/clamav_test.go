@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -56,7 +57,8 @@ func NewServer(netw, addr string, handler handlerType) *ClamdMockTCPServer {
 		quit:  make(chan struct{}),
 		ready: make(chan bool, 1),
 	}
-	l, err := net.Listen(netw, addr)
+	config := &net.ListenConfig{}
+	l, err := config.Listen(context.Background(), netw, addr)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -124,52 +126,47 @@ func (s *ClamdMockTCPServer) Serve(handler handlerType) {
 
 func (s *ClamdMockTCPServer) Stop() {
 	close(s.quit)
-	s.listener.Close()
+	_ = s.listener.Close()
 	s.wg.Wait()
 }
 
-func (s *ClamdMockTCPServer) readFromConnection(conn net.Conn) ([]byte, int) {
+func (s *ClamdMockTCPServer) readFromConnection(conn net.Conn) {
 	buf := make([]byte, 1) // reading byte by byte
 	msg := make([]byte, 0)
-	i := 0
 
 	for {
 		n, err := conn.Read(buf)
-		i += n
 
-		if err != nil && err != io.EOF {
+		if err != nil && !errors.Is(err, io.EOF) {
 			log.Fatalf("error while reading response: %s", err)
 		}
 
 		msg = append(msg, buf[:n]...)
-		if err == io.EOF || n == 0 || bytes.HasSuffix(msg, []byte{'\000'}) || bytes.HasSuffix(msg, []byte{'\n'}) {
-			return msg, i
+		if errors.Is(err, io.EOF) || n == 0 || bytes.HasSuffix(msg, []byte{'\000'}) || bytes.HasSuffix(msg, []byte{'\n'}) {
+			return
 		}
 	}
-
 }
 
 func (s *ClamdMockTCPServer) handlerPing(conn net.Conn) {
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	s.readFromConnection(conn)
-	fmt.Fprint(conn, "PONG\000")
-
+	_, _ = fmt.Fprint(conn, "PONG\000")
 }
 
 func (s *ClamdMockTCPServer) handlerVersion(conn net.Conn) {
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	s.readFromConnection(conn)
-	fmt.Fprintf(conn, "ClamAV 1.0.1/26961/%s\000", time.Now().Format("Thu Jul  6 07:29:38 2023"))
-
+	_, _ = fmt.Fprintf(conn, "ClamAV 1.0.1/26961/%s\000", time.Now().Format("Thu Jul  6 07:29:38 2023"))
 }
 
 func (s *ClamdMockTCPServer) handlerReload(conn net.Conn) {
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	s.readFromConnection(conn)
-	fmt.Fprint(conn, "RELOADING\000")
+	_, _ = fmt.Fprint(conn, "RELOADING\000")
 }
 
 // Example of output for a 'STATS' command
@@ -184,24 +181,24 @@ MEMSTATS: heap N/A mmap N/A used N/A free N/A releasable N/A pools 1 pools_used 
 END`
 
 func (s *ClamdMockTCPServer) handlerStats(conn net.Conn) {
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	s.readFromConnection(conn)
-	fmt.Fprint(conn, statsResp)
+	_, _ = fmt.Fprint(conn, statsResp)
 }
 
 // Example of output for a 'VERSIONCOMMANDS' command
 var versionCommandsResp = `ClamAV 1.0.1/26961/Thu Jul  6 07:29:38 2023| COMMANDS: SCAN QUIT RELOAD PING CONTSCAN VERSIONCOMMANDS VERSION END SHUTDOWN MULTISCAN FILDES STATS IDSESSION INSTREAM DETSTATSCLEAR DETSTATS ALLMATCHSCAN`
 
 func (s *ClamdMockTCPServer) handlerVersionCommands(conn net.Conn) {
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	s.readFromConnection(conn)
-	fmt.Fprint(conn, versionCommandsResp)
+	_, _ = fmt.Fprint(conn, versionCommandsResp)
 }
 
 func (s *ClamdMockTCPServer) handlerShutdown(conn net.Conn) {
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 	s.readFromConnection(conn)
 }
 
@@ -227,33 +224,33 @@ func (s *ClamdMockTCPServer) readInStreamCmd(conn net.Conn) []byte {
 
 	for {
 		n, err := conn.Read(buf)
-		if err != nil && err != io.EOF {
+		if err != nil && !errors.Is(err, io.EOF) {
 			log.Fatalf("error while reading response: %s", err)
 		}
 
 		msg = append(msg, buf[:n]...)
-		if err == io.EOF || n == 0 || bytes.HasSuffix(msg, []byte{'\000', '\000', '\000', '\000'}) {
+		if errors.Is(err, io.EOF) || n == 0 || bytes.HasSuffix(msg, []byte{'\000', '\000', '\000', '\000'}) {
 			return msg
 		}
 	}
 }
 
 func (s *ClamdMockTCPServer) handlerInStreamGoodFile(conn net.Conn) {
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	s.readInStreamCmd(conn)
-	fmt.Fprint(conn, "stream: OK\000")
+	_, _ = fmt.Fprint(conn, "stream: OK\000")
 }
 
 func (s *ClamdMockTCPServer) handlerInStreamBadFile(conn net.Conn) {
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	s.readInStreamCmd(conn)
-	fmt.Fprint(conn, "stream: Win.Test.EICAR_HDB-1 FOUND\000")
+	_, _ = fmt.Fprint(conn, "stream: Win.Test.EICAR_HDB-1 FOUND\000")
 }
 
 func (s *ClamdMockTCPServer) handlerInStreamTooLongFile(conn net.Conn) {
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	msg := s.readInStreamCmd(conn)
 	// Get file size. It's 4 bytes after the Command
@@ -261,7 +258,7 @@ func (s *ClamdMockTCPServer) handlerInStreamTooLongFile(conn net.Conn) {
 	size := binary.BigEndian.Uint32(fsize)
 
 	if size > 128 {
-		fmt.Fprint(conn, "INSTREAM size limit exceeded. ERROR\000")
+		_, _ = fmt.Fprint(conn, "INSTREAM size limit exceeded. ERROR\000")
 	}
 }
 
@@ -275,37 +272,37 @@ func TestNewClamavClient(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want *ClamavClient
+		want *Client
 	}{
 		{
 			name: "empty args",
 			args: args{"", "", 0, 0},
-			want: &ClamavClient{dialer: net.Dialer{}, address: "", network: ""},
+			want: &Client{dialer: net.Dialer{}, address: "", network: ""},
 		},
 		{
 			name: "address set - empty args",
 			args: args{"127.0.0.1", "", 0, 0},
-			want: &ClamavClient{dialer: net.Dialer{}, address: "127.0.0.1", network: ""},
+			want: &Client{dialer: net.Dialer{}, address: "127.0.0.1", network: ""},
 		},
 		{
 			name: "network set - empty args",
 			args: args{"", "tcp", 0, 0},
-			want: &ClamavClient{dialer: net.Dialer{}, address: "", network: "tcp"},
+			want: &Client{dialer: net.Dialer{}, address: "", network: "tcp"},
 		},
 		{
 			name: "timeout set to 10s - empty args",
 			args: args{"", "", 10 * time.Second, 0},
-			want: &ClamavClient{dialer: net.Dialer{Timeout: 10 * time.Second, KeepAlive: 0}},
+			want: &Client{dialer: net.Dialer{Timeout: 10 * time.Second, KeepAlive: 0}},
 		},
 		{
 			name: "keepalive set to 10s - empty args",
 			args: args{"", "", 0, 10 * time.Second},
-			want: &ClamavClient{dialer: net.Dialer{Timeout: 0, KeepAlive: 10 * time.Second}},
+			want: &Client{dialer: net.Dialer{Timeout: 0, KeepAlive: 10 * time.Second}},
 		},
 		{
 			name: "address set - network set - timeout set - keepalive set",
 			args: args{"127.0.0.1", "tcp", 10 * time.Second, 10 * time.Second},
-			want: &ClamavClient{dialer: net.Dialer{Timeout: 10 * time.Second, KeepAlive: 10 * time.Second}, address: "127.0.0.1", network: "tcp"},
+			want: &Client{dialer: net.Dialer{Timeout: 10 * time.Second, KeepAlive: 10 * time.Second}, address: "127.0.0.1", network: "tcp"},
 		},
 	}
 	for _, tt := range tests {
@@ -319,7 +316,7 @@ func TestNewClamavClient(t *testing.T) {
 	}
 }
 
-func TestClamavClientPing(t *testing.T) {
+func TestClientPing(t *testing.T) {
 	// Start mock tcp server on random port and wait for it to be ready
 	s := NewServer(network, listen, handlerPing)
 	<-s.ready
@@ -340,7 +337,7 @@ func TestClamavClientPing(t *testing.T) {
 	assert.Nil(t, resp)
 }
 
-func TestClamavClientVersion(t *testing.T) {
+func TestClientVersion(t *testing.T) {
 	// Start mock tcp server on random port and wait for it to be ready
 	s := NewServer(network, listen, handlerVersion)
 	<-s.ready
@@ -364,7 +361,7 @@ func TestClamavClientVersion(t *testing.T) {
 	assert.Nil(t, resp)
 }
 
-func TestClamavClientReload(t *testing.T) {
+func TestClientReload(t *testing.T) {
 	// Start mock tcp server on random port and wait for it to be ready
 	s := NewServer(network, listen, handlerReload)
 	<-s.ready
@@ -383,7 +380,7 @@ func TestClamavClientReload(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestClamavClientStats(t *testing.T) {
+func TestClientStats(t *testing.T) {
 	// Start mock tcp server on random port and wait for it to be ready
 	s := NewServer(network, listen, handlerStats)
 	<-s.ready
@@ -404,7 +401,7 @@ func TestClamavClientStats(t *testing.T) {
 	assert.Nil(t, resp)
 }
 
-func TestClamavClientVersionCommands(t *testing.T) {
+func TestClientVersionCommands(t *testing.T) {
 	// Start mock tcp server on random port and wait for it to be ready
 	s := NewServer(network, listen, handlerVersionCommands)
 	<-s.ready
@@ -425,7 +422,7 @@ func TestClamavClientVersionCommands(t *testing.T) {
 	assert.Nil(t, resp)
 }
 
-func TestClamavClientVersionShutdown(t *testing.T) {
+func TestClientVersionShutdown(t *testing.T) {
 	// Start mock tcp server on random port and wait for it to be ready
 	s := NewServer(network, listen, handlerShutdown)
 	<-s.ready
@@ -444,7 +441,7 @@ func TestClamavClientVersionShutdown(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestClamavClientInStream(t *testing.T) {
+func TestClientInStream(t *testing.T) {
 	// Good file
 	// Start mock tcp server on random port and wait for it to be ready
 	s := NewServer(network, listen, handlerInStreamGoodFile)
@@ -495,7 +492,7 @@ func TestClamavClientInStream(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestClamavClientParseResponse(t *testing.T) {
+func TestClientParseResponse(t *testing.T) {
 	tests := []struct {
 		name    string
 		resp    []byte
@@ -553,7 +550,7 @@ func TestClamavClientParseResponse(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &ClamavClient{}
+			c := &Client{}
 
 			err := c.parseResponse(tt.resp)
 			if tt.wantErr {

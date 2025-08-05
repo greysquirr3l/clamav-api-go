@@ -1,0 +1,100 @@
+# CODEOWNERS file for ClamAV API Go Project
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global ownership - all files require review from core maintainers
+* @greysquirr3l
+
+# Go source code - requires Go experts and security review
+*.go @greysquirr3l
+**/*.go @greysquirr3l
+
+# Go module files - critical for dependency management and security
+go.mod @greysquirr3l
+go.sum @greysquirr3l
+**/go.mod @greysquirr3l
+**/go.sum @greysquirr3l
+
+# Core application entry point
+main.go @greysquirr3l
+
+# Internal packages - require architecture and security review
+internal/ @greysquirr3l
+internal/clamav/ @greysquirr3l
+internal/controllers/ @greysquirr3l
+internal/config/ @greysquirr3l
+internal/logger/ @greysquirr3l
+
+# ClamAV integration - critical security component
+internal/clamav/*.go @greysquirr3l
+**/clamav*.go @greysquirr3l
+
+# HTTP controllers - API security and design review
+internal/controllers/*.go @greysquirr3l
+**/controllers/*.go @greysquirr3l
+**/handler*.go @greysquirr3l
+
+# Configuration management - operational security
+internal/config/*.go @greysquirr3l
+**/config*.go @greysquirr3l
+
+# Documentation - technical writing and architecture review
+*.md @greysquirr3l
+docs/ @greysquirr3l
+**/*.md @greysquirr3l
+docs/dev/ @greysquirr3l
+
+# Project guidelines and architecture documentation
+docs/dev/copilot-instructions.md @greysquirr3l
+docs/dev/project_guidelines.md @greysquirr3l
+docs/dev/security_first_repository_design.md @greysquirr3l
+
+# Configuration files - infrastructure and deployment
+*.yml @greysquirr3l
+*.yaml @greysquirr3l
+*.json @greysquirr3l
+*.toml @greysquirr3l
+docker-compose.yaml @greysquirr3l
+Dockerfile @greysquirr3l
+skaffold.yaml @greysquirr3l
+
+# Kubernetes deployment manifests
+deploy/ @greysquirr3l
+deploy/k8s/ @greysquirr3l
+
+# CI/CD workflows - DevOps and security review
+.github/ @greysquirr3l
+.github/workflows/ @greysquirr3l
+
+# Security and compliance files
+SECURITY.md @greysquirr3l
+CODEOWNERS @greysquirr3l
+.gitignore @greysquirr3l
+
+# Test files - quality assurance and security testing
+*_test.go @greysquirr3l
+**/*_test.go @greysquirr3l
+e2e/ @greysquirr3l
+e2e/venom.e2e.yaml @greysquirr3l
+e2e/testsdata/ @greysquirr3l
+
+# Test data - includes virus samples, requires security review
+e2e/testsdata/eicar.txt @greysquirr3l
+**/eicar* @greysquirr3l
+**/virus* @greysquirr3l
+
+# Build and development scripts
+scripts/ @greysquirr3l
+scripts/*.sh @greysquirr3l
+
+# Release and packaging files
+LICENSE @greysquirr3l
+README.md @greysquirr3l
+CHANGELOG.md @greysquirr3l
+
+# Development tooling and setup
+.golangci.yml @greysquirr3l
+.pre-commit-config.yaml @greysquirr3l
+
+# Reference configurations
+reference/ @greysquirr3l
+reference/docker-compose.yml @greysquirr3l

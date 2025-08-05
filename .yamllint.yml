@@ -1,0 +1,43 @@
+# yamllint configuration
+# https://yamllint.readthedocs.io/en/stable/configuration.html
+
+extends: default
+
+rules:
+  # 120 chars should be enough, but don't fail the build
+  line-length:
+    max: 120
+    level: warning
+
+  # Allow empty values
+  empty-values:
+    forbid-in-block-mappings: true
+    forbid-in-flow-mappings: true
+
+  # Comments formatting
+  comments:
+    min-spaces-from-content: 2
+    require-starting-space: true
+
+  # Indentation rules
+  indentation:
+    spaces: 2
+    indent-sequences: true
+    check-multi-line-strings: false
+
+  # Allow truthy values like "yes", "on"
+  truthy:
+    allowed-values: ['true', 'false', 'yes', 'no', 'on', 'off']
+    check-keys: false
+
+  # Document rules
+  document-start: disable
+  document-end: disable
+
+  # Allow longer lines in certain contexts
+  brackets:
+    min-spaces-inside: 0
+    max-spaces-inside: 1
+
+  # Float values
+  float-values: disable

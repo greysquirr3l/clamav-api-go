@@ -14,7 +14,7 @@ import (
 
 func TestNewHandler(t *testing.T) {
 	logger := zerolog.Logger{}
-	c := clamav.ClamavClient{}
+	c := clamav.Client{}
 	type args struct {
 		logger *zerolog.Logger
 		clamav clamav.Clamaver
@@ -51,9 +51,10 @@ var _ clamav.Clamaver = (*MockClamav)(nil)
 func (m *MockClamav) Ping(ctx context.Context) ([]byte, error) {
 	scenario := ctx.Value(MockScenario(""))
 
-	if scenario == ScenarioNoError {
+	switch scenario {
+	case ScenarioNoError:
 		return []byte("PONG"), nil
-	} else {
+	default:
 		return nil, dispatchErrFromScenario(scenario.(MockScenario))
 	}
 }
@@ -61,9 +62,10 @@ func (m *MockClamav) Ping(ctx context.Context) ([]byte, error) {
 func (m *MockClamav) Version(ctx context.Context) ([]byte, error) {
 	scenario := ctx.Value(MockScenario(""))
 
-	if scenario == ScenarioNoError {
+	switch scenario {
+	case ScenarioNoError:
 		return []byte("ClamAV 1.0.1/26961/Thu Jul  6 07:29:38 2023"), nil
-	} else {
+	default:
 		return nil, dispatchErrFromScenario(scenario.(MockScenario))
 	}
 }
@@ -71,9 +73,10 @@ func (m *MockClamav) Version(ctx context.Context) ([]byte, error) {
 func (m *MockClamav) Reload(ctx context.Context) error {
 	scenario := ctx.Value(MockScenario(""))
 
-	if scenario == ScenarioNoError {
+	switch scenario {
+	case ScenarioNoError:
 		return nil
-	} else {
+	default:
 		return dispatchErrFromScenario(scenario.(MockScenario))
 	}
 }
@@ -81,7 +84,8 @@ func (m *MockClamav) Reload(ctx context.Context) error {
 func (m *MockClamav) Stats(ctx context.Context) ([]byte, error) {
 	scenario := ctx.Value(MockScenario(""))
 
-	if scenario == ScenarioNoError {
+	switch scenario {
+	case ScenarioNoError:
 		resp := `POOLS: 1
 
 STATE: VALID PRIMARY
@@ -92,10 +96,10 @@ QUEUE: 0 items
 MEMSTATS: heap N/A mmap N/A used N/A free N/A releasable N/A pools 1 pools_used 1306.837M pools_total 1306.882M
 END`
 		return []byte(resp), nil
-	} else if scenario == ScenarioStatsErrMarshall {
+	case ScenarioStatsErrMarshall:
 		resp := `POOLS: POOLS: POOLS: some invalid stats`
 		return []byte(resp), nil
-	} else {
+	default:
 		return nil, dispatchErrFromScenario(scenario.(MockScenario))
 	}
 }
@@ -103,11 +107,12 @@ END`
 func (m *MockClamav) VersionCommands(ctx context.Context) ([]byte, error) {
 	scenario := ctx.Value(MockScenario(""))
 
-	if scenario == ScenarioNoError {
+	switch scenario {
+	case ScenarioNoError:
 		return []byte("ClamAV 1.0.1/26963/Sat Jul  8 07:27:53 2023| COMMANDS: SCAN QUIT RELOAD PING CONTSCAN VERSIONCOMMANDS VERSION END SHUTDOWN MULTISCAN FILDES STATS IDSESSION INSTREAM DETSTATSCLEAR DETSTATS ALLMATCHSCAN"), nil
-	} else if scenario == ScenarioVersionCommandsErrMarshall {
+	case ScenarioVersionCommandsErrMarshall:
 		return []byte("Some unparsable VERSIONCOMMANS output"), nil
-	} else {
+	default:
 		return nil, dispatchErrFromScenario(scenario.(MockScenario))
 	}
 }
@@ -115,21 +120,23 @@ func (m *MockClamav) VersionCommands(ctx context.Context) ([]byte, error) {
 func (m *MockClamav) Shutdown(ctx context.Context) error {
 	scenario := ctx.Value(MockScenario(""))
 
-	if scenario == ScenarioNoError {
+	switch scenario {
+	case ScenarioNoError:
 		return nil
-	} else {
+	default:
 		return dispatchErrFromScenario(scenario.(MockScenario))
 	}
 }
 
-func (m *MockClamav) InStream(ctx context.Context, r io.Reader, size int64) ([]byte, error) {
+func (m *MockClamav) InStream(ctx context.Context, _ io.Reader, _ int64) ([]byte, error) {
 	scenario := ctx.Value(MockScenario(""))
 
-	if scenario == ScenarioNoError {
+	switch scenario {
+	case ScenarioNoError:
 		return []byte("stream: OK"), nil
-	} else if scenario == ScenarioErrVirusFound {
+	case ScenarioErrVirusFound:
 		return []byte("stream: Win.Test.EICAR_HDB-1 FOUND"), clamav.ErrVirusFound
-	} else {
+	default:
 		return nil, dispatchErrFromScenario(scenario.(MockScenario))
 	}
 }

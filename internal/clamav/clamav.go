@@ -1,3 +1,6 @@
+// Package clamav provides a client interface for communicating with ClamAV antivirus daemon.
+// It implements the ClamAV TCP protocol for various operations including virus scanning,
+// status checks, and daemon management.
 package clamav
 
 import (
@@ -5,12 +8,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"net"
 	"time"
 )
 
+// Clamaver defines the interface for ClamAV operations.
+// All methods accept a context for cancellation and timeout handling.
 type Clamaver interface {
 	Ping(ctx context.Context) ([]byte, error)
 	Version(ctx context.Context) ([]byte, error)
@@ -21,16 +27,21 @@ type Clamaver interface {
 	InStream(ctx context.Context, r io.Reader, size int64) ([]byte, error)
 }
 
-type ClamavClient struct {
+// Client implements the Clamaver interface and provides
+// TCP-based communication with a ClamAV daemon.
+type Client struct {
 	dialer  net.Dialer
 	address string
 	network string
 }
 
-var _ Clamaver = (*ClamavClient)(nil)
+var _ Clamaver = (*Client)(nil)
 
-func NewClamavClient(addr string, netw string, timeout time.Duration, keepalive time.Duration) *ClamavClient {
-	return &ClamavClient{
+// NewClamavClient creates a new ClamAV client with the specified network parameters.
+// addr is the ClamAV daemon address, netw is the network type (usually "tcp"),
+// timeout is the connection timeout, and keepalive is the keep-alive duration.
+func NewClamavClient(addr string, netw string, timeout time.Duration, keepalive time.Duration) *Client {
+	return &Client{
 		dialer: net.Dialer{
 			Timeout:   timeout,
 			KeepAlive: keepalive,
@@ -40,12 +51,13 @@ func NewClamavClient(addr string, netw string, timeout time.Duration, keepalive 
 	}
 }
 
-func (c *ClamavClient) Ping(ctx context.Context) ([]byte, error) {
+// Ping sends a PING command to the ClamAV daemon to test connectivity.
+func (c *Client) Ping(ctx context.Context) ([]byte, error) {
 	conn, err := c.dialer.DialContext(ctx, c.network, c.address)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to connect to clamav: %w", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	resp, err := c.SendCommand(conn, CmdPing)
 	if err != nil {
@@ -59,12 +71,13 @@ func (c *ClamavClient) Ping(ctx context.Context) ([]byte, error) {
 	return resp, nil
 }
 
-func (c *ClamavClient) Version(ctx context.Context) ([]byte, error) {
+// Version gets the ClamAV daemon version information.
+func (c *Client) Version(ctx context.Context) ([]byte, error) {
 	conn, err := c.dialer.DialContext(ctx, c.network, c.address)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to connect to clamav: %w", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	resp, err := c.SendCommand(conn, CmdVersion)
 	if err != nil {
@@ -78,12 +91,13 @@ func (c *ClamavClient) Version(ctx context.Context) ([]byte, error) {
 	return resp, nil
 }
 
-func (c *ClamavClient) Reload(ctx context.Context) error {
+// Reload instructs the ClamAV daemon to reload its configuration and virus databases.
+func (c *Client) Reload(ctx context.Context) error {
 	conn, err := c.dialer.DialContext(ctx, c.network, c.address)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to connect to clamav: %w", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	resp, err := c.SendCommand(conn, CmdReload)
 	if err != nil {
@@ -101,12 +115,13 @@ func (c *ClamavClient) Reload(ctx context.Context) error {
 	return nil
 }
 
-func (c *ClamavClient) Stats(ctx context.Context) ([]byte, error) {
+// Stats retrieves statistics from the ClamAV daemon.
+func (c *Client) Stats(ctx context.Context) ([]byte, error) {
 	conn, err := c.dialer.DialContext(ctx, c.network, c.address)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to connect to clamav: %w", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	resp, err := c.SendCommand(conn, CmdStats)
 	if err != nil {
@@ -120,12 +135,13 @@ func (c *ClamavClient) Stats(ctx context.Context) ([]byte, error) {
 	return resp, nil
 }
 
-func (c *ClamavClient) VersionCommands(ctx context.Context) ([]byte, error) {
+// VersionCommands retrieves the list of available commands from the ClamAV daemon.
+func (c *Client) VersionCommands(ctx context.Context) ([]byte, error) {
 	conn, err := c.dialer.DialContext(ctx, c.network, c.address)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to connect to clamav: %w", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	resp, err := c.SendCommand(conn, CmdVersionCommands)
 	if err != nil {
@@ -139,14 +155,15 @@ func (c *ClamavClient) VersionCommands(ctx context.Context) ([]byte, error) {
 	return resp, nil
 }
 
-func (c *ClamavClient) Shutdown(ctx context.Context) error {
+// Shutdown instructs the ClamAV daemon to shutdown gracefully.
+func (c *Client) Shutdown(ctx context.Context) error {
 	conn, err := c.dialer.DialContext(ctx, c.network, c.address)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to connect to clamav: %w", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
-	_, err = c.SendCommand(conn, CmdVersionCommands)
+	_, err = c.SendCommand(conn, CmdShutdown)
 	if err != nil {
 		return fmt.Errorf("error while sending command: %w", err)
 	}
@@ -162,11 +179,12 @@ func (c *ClamavClient) Shutdown(ctx context.Context) error {
 // encountered.
 //
 // See https://linux.die.net/man/8/clamd for a detailed explanation of the INSTREAM command.
-func (c *ClamavClient) InStream(ctx context.Context, r io.Reader, size int64) ([]byte, error) {
+func (c *Client) InStream(ctx context.Context, r io.Reader, size int64) ([]byte, error) {
 	conn, err := c.dialer.DialContext(ctx, c.network, c.address)
 	if err != nil {
 		return nil, fmt.Errorf("error while dialing %s/%s: %w", c.network, c.address, err)
 	}
+	defer func() { _ = conn.Close() }()
 
 	// The format of the chunk is: '<length><data>' where <length> is the size of the following data in bytes
 	// expressed as a 4 byte unsigned integer in network byte order and <data> is the actual chunk.
@@ -180,17 +198,25 @@ func (c *ClamavClient) InStream(ctx context.Context, r io.Reader, size int64) ([
 	if err != nil {
 		return nil, fmt.Errorf("error while writing command to %s/%s: %w", c.network, c.address, err)
 	}
-	writer.Flush()
+	if err = writer.Flush(); err != nil {
+		return nil, fmt.Errorf("error while flushing command to %s/%s: %w", c.network, c.address, err)
+	}
 
-	// The size (refered previously as '<length>') must be a byte[] of length 4 - representing a
+	// The size (referred previously as '<length>') must be a byte[] of length 4 - representing a
 	// uint32 in a big-endian format (network byte order, tcp standard).
 	b := make([]byte, 4)
-	binary.BigEndian.PutUint32(b, uint32(size))
+	if size > 0 && size <= 4294967295 { // Check for valid uint32 range
+		binary.BigEndian.PutUint32(b, uint32(size))
+	} else {
+		return nil, fmt.Errorf("file size %d exceeds maximum allowed size", size)
+	}
 	_, err = writer.Write(b)
 	if err != nil {
 		return nil, fmt.Errorf("error while writing data length to %s/%s: %w", c.network, c.address, err)
 	}
-	writer.Flush()
+	if err = writer.Flush(); err != nil {
+		return nil, fmt.Errorf("error while flushing data length to %s/%s: %w", c.network, c.address, err)
+	}
 
 	// Streaming the data
 	_, err = reader.WriteTo(writer)
@@ -201,7 +227,7 @@ func (c *ClamavClient) InStream(ctx context.Context, r io.Reader, size int64) ([
 		}
 		err = c.parseResponse(resp)
 		if err != nil {
-			if err == ErrScanFileSizeLimitExceeded {
+			if errors.Is(err, ErrScanFileSizeLimitExceeded) {
 				return nil, err
 			}
 			return nil, fmt.Errorf("error from clamav: %w", err)
@@ -214,7 +240,9 @@ func (c *ClamavClient) InStream(ctx context.Context, r io.Reader, size int64) ([
 	if err != nil {
 		return nil, fmt.Errorf("error while writing end of transfer signal to %s/%s: %w", c.network, c.address, err)
 	}
-	writer.Flush()
+	if err = writer.Flush(); err != nil {
+		return nil, fmt.Errorf("error while flushing end of transfer signal to %s/%s: %w", c.network, c.address, err)
+	}
 
 	resp, err := c.readResponse(conn)
 	if err != nil {
@@ -223,7 +251,7 @@ func (c *ClamavClient) InStream(ctx context.Context, r io.Reader, size int64) ([
 
 	err = c.parseResponse(resp)
 	if err != nil {
-		if err == ErrVirusFound {
+		if errors.Is(err, ErrVirusFound) {
 			return resp, err
 		}
 		return nil, fmt.Errorf("error from clamav: %w", err)
@@ -238,14 +266,16 @@ func (c *ClamavClient) InStream(ctx context.Context, r io.Reader, size int64) ([
 // encountered.
 //
 // See https://linux.die.net/man/8/clamd for a list of supported commands.
-func (c *ClamavClient) SendCommand(conn net.Conn, cmd []byte) ([]byte, error) {
+func (c *Client) SendCommand(conn net.Conn, cmd Command) ([]byte, error) {
 	writer := bufio.NewWriter(conn)
 
 	_, err := writer.Write(cmd)
 	if err != nil {
 		return nil, fmt.Errorf("error while writing command to %s/%s: %w", c.network, c.address, err)
 	}
-	writer.Flush()
+	if err = writer.Flush(); err != nil {
+		return nil, fmt.Errorf("error while flushing command to %s/%s: %w", c.network, c.address, err)
+	}
 
 	resp, err := c.readResponse(conn)
 	if err != nil {
@@ -257,7 +287,7 @@ func (c *ClamavClient) SendCommand(conn net.Conn, cmd []byte) ([]byte, error) {
 
 // readResponse will read from the given io.Reader until a null character is found
 // and returns the read bytes before the null character or any error encountered.
-func (c *ClamavClient) readResponse(r io.Reader) ([]byte, error) {
+func (c *Client) readResponse(r io.Reader) ([]byte, error) {
 	reader := bufio.NewReader(r)
 
 	resp, err := reader.ReadBytes('\000')
@@ -273,7 +303,7 @@ func (c *ClamavClient) readResponse(r io.Reader) ([]byte, error) {
 // parseResponse will attempt to parse the Clamav response to the command
 // and determine whether or not Clamav answered with an error.
 // See clamav/errors.go for a list of known errors.
-func (c *ClamavClient) parseResponse(msg []byte) error {
+func (c *Client) parseResponse(msg []byte) error {
 	if bytes.EqualFold(msg, RespErrScanFileSizeLimitExceeded) {
 		return ErrScanFileSizeLimitExceeded
 	}

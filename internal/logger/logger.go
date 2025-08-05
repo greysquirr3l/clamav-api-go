@@ -1,3 +1,4 @@
+// Package logger provides logging functionality using zerolog.
 package logger
 
 import (
@@ -7,6 +8,9 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// New creates and configures a new zerolog logger instance.
+// loglevel sets the minimum log level, durationFieldUnit sets time unit for durations,
+// and format determines output format ("json" for JSON, otherwise console).
 func New(loglevel, durationFieldUnit, format string) *zerolog.Logger {
 	// Parse loglevel to a zerolog.Level
 	// Default to InfoLevel

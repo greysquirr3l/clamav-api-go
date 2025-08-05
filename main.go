@@ -1,3 +1,6 @@
+// Package main provides a REST API wrapper for ClamAV antivirus scanning.
+// It implements HTTP endpoints for virus scanning, daemon management, and health checks
+// with comprehensive logging, middleware support, and graceful shutdown capabilities.
 package main
 
 import (
@@ -103,5 +106,4 @@ func main() {
 	if err := s.Shutdown(ctx); err != nil {
 		logger.Warn().Msg("Failed to gracefully shutdown the server")
 	}
-
 }

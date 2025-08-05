@@ -166,8 +166,8 @@ func TestHandlerInStream(t *testing.T) {
 			b := &bytes.Buffer{}
 			writer := multipart.NewWriter(b)
 			part, _ := writer.CreateFormFile("file", tt.args.filename)
-			io.Copy(part, r)
-			writer.Close()
+			_, _ = io.Copy(part, r)
+			_ = writer.Close()
 
 			ctx := context.WithValue(context.Background(), MockScenario(""), tt.args.scenario)
 			req, err := http.NewRequestWithContext(ctx, "POST", "/rest/v1/scan", b)

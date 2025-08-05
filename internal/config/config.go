@@ -1,6 +1,9 @@
+// Package config provides configuration management for the ClamAV API application.
+// It supports loading configuration from JSON, YAML files, and environment variables.
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,7 +15,7 @@ import (
 )
 
 const (
-	// Name of the application
+	// AppName is the name of the application
 	AppName = "clamav-api-go"
 
 	configNameJSON = "config.json"
@@ -37,6 +40,7 @@ var (
 	defaultClamavKeepAlive = 30 * time.Second
 )
 
+// App holds the complete application configuration.
 type App struct {
 	// Address for the server to listen on
 	ServerAddr string `json:"server_addr" yaml:"server_addr" mapstructure:"SERVER_ADDR"`
@@ -108,17 +112,17 @@ func New() (*App, error) {
 	// environment variables
 	err := viper.ReadInConfig()
 	if err != nil {
-		switch err.(type) {
-		default:
-			return nil, fmt.Errorf("error while loading config file: %s", err)
-		case viper.ConfigFileNotFoundError:
+		var configFileNotFoundError viper.ConfigFileNotFoundError
+		if errors.As(err, &configFileNotFoundError) {
 			readConfigFromEnvVars(c)
+		} else {
+			return nil, fmt.Errorf("error while loading config file: %w", err)
 		}
 	}
 
 	err = viper.Unmarshal(&c)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error while unmarshaling config: %w", err)
 	}
 
 	err = validateConfig(&c)
@@ -131,7 +135,7 @@ func New() (*App, error) {
 
 // validateConfig will make sure the provided configuration is valid
 // by looking if the values are present when they are expected to be present
-func validateConfig(c *App) error {
+func validateConfig(_ *App) error {
 	return nil
 }
 
@@ -155,7 +159,7 @@ func bindEnvs(iface interface{}, parts ...string) {
 		case reflect.Struct:
 			bindEnvs(v.Interface(), append(parts, tv)...)
 		default:
-			viper.BindEnv(strings.Join(append(parts, tv), "."))
+			_ = viper.BindEnv(strings.Join(append(parts, tv), "."))
 		}
 	}
 }

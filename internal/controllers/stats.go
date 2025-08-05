@@ -24,33 +24,35 @@ type StatsResponse struct {
 	Memstats string `json:"memstats"`
 }
 
+// ErrParsingStats indicates an error occurred while parsing ClamAV stats.
 var ErrParsingStats = errors.New("error while parsing 'stats'")
 
+// Stats handles requests for ClamAV daemon statistics.
 func (h *Handler) Stats(w http.ResponseWriter, r *http.Request) {
 	// Get request id for logging purposes
-	req_id, _ := hlog.IDFromCtx(r.Context())
+	reqID, _ := hlog.IDFromCtx(r.Context())
 
 	ctx := r.Context()
 
 	stats, err := h.Clamav.Stats(ctx)
 	if err != nil {
-		h.Logger.Error().Str("req_id", req_id.String()).Msgf("error while sending stats command: %v", err)
+		h.Logger.Error().Str("req_id", reqID.String()).Msgf("error while sending stats command: %v", err)
 
 		SetErrorResponse(w, err)
 		return
 	}
 
-	h.Logger.Debug().Str("req_id", req_id.String()).Msg("stats command sent successfully")
+	h.Logger.Debug().Str("req_id", reqID.String()).Msg("stats command sent successfully")
 
 	s, err := statsMarshall(string(stats))
 	if err != nil {
-		h.Logger.Error().Str("req_id", req_id.String()).Msgf("error while marshalling stats: %v", err)
+		h.Logger.Error().Str("req_id", reqID.String()).Msgf("error while marshalling stats: %v", err)
 
 		SetErrorResponse(w, err)
 		return
 	}
 
-	h.Logger.Debug().Str("req_id", req_id.String()).Msg("stats marshalled successfully")
+	h.Logger.Debug().Str("req_id", reqID.String()).Msg("stats marshalled successfully")
 
 	resp, err := json.Marshal(&s)
 	if err != nil {
@@ -60,7 +62,9 @@ func (h *Handler) Stats(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Content-Type", ContentTypeApplicationJSON)
 	w.WriteHeader(http.StatusOK)
-	w.Write(resp)
+	if _, err := w.Write(resp); err != nil {
+		h.Logger.Error().Str("req_id", reqID.String()).Msgf("failed to write response: %v", err)
+	}
 }
 
 // statsMarshall will marshall the string s

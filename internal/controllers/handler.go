@@ -7,21 +7,18 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const (
-	// ContentTypeApplicationJSON represent the applcation/json Content-Type value
-	ContentTypeApplicationJSON = "application/json"
-)
-
+// Handler provides HTTP request handlers for ClamAV API endpoints.
 type Handler struct {
 	Clamav clamav.Clamaver
 	Logger *zerolog.Logger
 }
 
+// NewHandler creates a new Handler with the provided logger and ClamAV client.
 func NewHandler(logger *zerolog.Logger, clamav clamav.Clamaver) *Handler {
 	return &Handler{Logger: logger, Clamav: clamav}
 }
 
-// MaxReqSizeis a HTTP middleware limiting the size of the request
+// MaxReqSize is a HTTP middleware limiting the size of the request.
 // by using http.MaxBytesReader() on the request body.
 func MaxReqSize(maxReqSize int64) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {

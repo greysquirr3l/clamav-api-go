@@ -1,7 +1,6 @@
 package clamav
 
-// The ClamavCommand represents Clamd commands
-// over a tcp connection.
+// Command represents ClamAV daemon commands over a TCP connection.
 //
 // It's recommended to prefix clamd commands with the letter z (eg. zSCAN)
 // to indicate that the command will be delimited by a NULL character and
@@ -14,14 +13,21 @@ package clamav
 // it will reply with an error message, and close the connection.
 //
 // More information on clamd(8)
-type ClamavCommand []byte
+type Command []byte
 
 var (
-	CmdPing            ClamavCommand = []byte("zPING\000")
-	CmdVersion         ClamavCommand = []byte("zVERSION\000")
-	CmdReload          ClamavCommand = []byte("zRELOAD\000")
-	CmdInstream        ClamavCommand = []byte("zINSTREAM\000")
-	CmdStats           ClamavCommand = []byte("zSTATS\000")
-	CmdVersionCommands ClamavCommand = []byte("nVERSIONCOMMANDS\n") // From https://linux.die.net/man/8/clamd, it is recommended to use nVERSIONCOMMANDS.
-	CmdShutdown        ClamavCommand = []byte("zSHUTDOWN\000")
+	// CmdPing sends a ping command to test connectivity
+	CmdPing Command = []byte("zPING\000")
+	// CmdVersion requests the ClamAV version information
+	CmdVersion Command = []byte("zVERSION\000")
+	// CmdReload instructs the daemon to reload its configuration
+	CmdReload Command = []byte("zRELOAD\000")
+	// CmdInstream begins an INSTREAM scan session
+	CmdInstream Command = []byte("zINSTREAM\000")
+	// CmdStats requests daemon statistics
+	CmdStats Command = []byte("zSTATS\000")
+	// CmdVersionCommands requests the list of available commands
+	CmdVersionCommands Command = []byte("nVERSIONCOMMANDS\n") // From https://linux.die.net/man/8/clamd, it is recommended to use nVERSIONCOMMANDS.
+	// CmdShutdown instructs the daemon to shutdown gracefully
+	CmdShutdown Command = []byte("zSHUTDOWN\000")
 )

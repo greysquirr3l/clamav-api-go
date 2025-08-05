@@ -1,13 +1,17 @@
 package clamav
 
-// The ClamavResponse represents Clamd responses
-// to commands over a tcp connection.
-type ClamavResponse []byte
+// Response represents ClamAV daemon responses to commands over a TCP connection.
+type Response []byte
 
 var (
-	RespPing                         ClamavResponse = []byte("PONG")
-	RespReload                       ClamavResponse = []byte("RELOADING")
-	RespScan                         ClamavResponse = []byte("stream: OK")
-	RespErrUnknownCommand            ClamavResponse = []byte("UNKNOWN COMMAND")
-	RespErrScanFileSizeLimitExceeded ClamavResponse = []byte("INSTREAM size limit exceeded. ERROR")
+	// RespPing is the expected response to a PING command
+	RespPing Response = []byte("PONG")
+	// RespReload is the expected response to a RELOAD command
+	RespReload Response = []byte("RELOADING")
+	// RespScan is the expected response for a clean file scan
+	RespScan Response = []byte("stream: OK")
+	// RespErrUnknownCommand indicates an unknown command was sent
+	RespErrUnknownCommand Response = []byte("UNKNOWN COMMAND")
+	// RespErrScanFileSizeLimitExceeded indicates file size limit was exceeded
+	RespErrScanFileSizeLimitExceeded Response = []byte("INSTREAM size limit exceeded. ERROR")
 )

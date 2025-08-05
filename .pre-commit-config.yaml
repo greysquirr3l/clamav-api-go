@@ -1,0 +1,74 @@
+# Pre-commit hooks configuration for go-headspace
+# Following GitHub CI/CD best practices for fast feedback and early issue detection
+# See: docs/github_cicd.md
+
+repos:
+  # Built-in pre-commit hooks (minimal set)
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: mixed-line-ending
+        args: [--fix=lf]
+
+  # Go-specific hooks (core Go tooling)
+  - repo: https://github.com/dnephin/pre-commit-golang
+    rev: v0.5.1
+    hooks:
+      # Format Go code
+      - id: go-fmt
+        args: [-w]
+
+      # Go imports formatting
+      - id: go-imports
+        args: [-w]
+
+      # Go module tidying
+      - id: go-mod-tidy
+
+      # Go unit tests
+      - id: go-unit-tests
+        args: [-race, -v]
+
+  # Lint Go code with golangci-lint (main code quality tool)
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v2.3.1
+    hooks:
+      - id: golangci-lint
+        args: [--timeout=10m, --config=.golangci.yml]
+
+  # Security vulnerability scanning with Nancy
+  - repo: local
+    hooks:
+      - id: nancy-vulnerability-scan
+        name: Nancy Security Scan
+        entry: bash -c 'go list -json -deps ./... | nancy sleuth'
+        language: system
+        types: [go]
+        pass_filenames: false
+        description: Scan Go dependencies for known security vulnerabilities using Nancy
+
+# Additional settings
+minimum_pre_commit_version: "3.0.0"
+
+# CI configuration
+ci:
+  autofix_commit_msg: |
+    🔧 [pre-commit.ci] auto fixes from pre-commit hooks
+
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '🔄 [pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: []
+  submodules: false
