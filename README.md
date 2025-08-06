@@ -1,538 +1,479 @@
-# clamav-api-go
+# ClamAV API Go 🛡️
 
-[![build and test](https://github.com/lescactus/clamav-api-go/actions/workflows/go.yaml/badge.svg)](https://github.com/lescactus/clamav-api-go/actions/workflows/go.yaml) [![Kubernetes](https://github.com/lescactus/clamav-api-go/actions/workflows/k8s.yaml/badge.svg)](https://github.com/lescactus/clamav-api-go/actions/workflows/k8s.yaml) [![Run e2e tests](https://github.com/lescactus/clamav-api-go/actions/workflows/e2e.yaml/badge.svg)](https://github.com/lescactus/clamav-api-go/actions/workflows/e2e.yaml) [![Release](https://github.com/lescactus/clamav-api-go/actions/workflows/release.yml/badge.svg)](https://github.com/lescactus/clamav-api-go/actions/workflows/release.yml)
+![Go](https://img.shields.io/badge/go-1.23+-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Docker](https://img.shields.io/badge/docker-ready-blue)
+![Security](https://img.shields.io/badge/security-authenticated-red)
 
-![go](https://img.shields.io/badge/go->=1.21-blue) ![skaffold](https://img.shields.io/badge/skaffold-v2.2.0-blue)
+Production-ready REST API wrapper for [ClamAV](http://www.clamav.net/) antivirus scanning with
+enterprise-grade security, authentication, and comprehensive virus detection capabilities.
 
- Simple REST API wrapper for [ClamAV](http://www.clamav.net/) written in Go.
+## 🚀 Features
 
-## Description
+- **🔒 Optional API Key Authentication** - Secure your endpoints with industry-standard authentication
+- **🦠 Comprehensive Virus Scanning** - Full ClamAV protocol support with optimized configurations
+- **🔄 Remote Virus Database Updates** - FreshClam API endpoint for automated definition management
+- **📊 Real-time Monitoring** - Health checks, statistics, and operational status endpoints
+- **🐳 Container Ready** - Production-optimized Docker deployment with multi-container architecture
+- **⚡ High Performance** - Optimized memory allocation supporting 1.6GB+ virus databases
+- **📝 Structured Logging** - JSON/Console logging with request correlation and observability
+- **🏗️ Clean Architecture** - Interface-driven design with comprehensive test coverage
 
-This is a REST API wrapper server with support for basic `INSTREAM` scanning, `VERSIONCOMMANDS`, `STATS`, `SHUTDOWN`, `VERSION`, `RELOAD` and `PING` command. 
+## 🎯 Use Cases
 
-The Clamd tcp protocol is explained here: http://linux.die.net/man/8/clamd
+- **Security Gateways** - Scan file uploads in web applications and APIs
+- **Email Security** - Integrate antivirus scanning into email processing pipelines
+- **Content Management** - Protect document management systems and file repositories
+- **CI/CD Security** - Scan artifacts and dependencies in automated build pipelines
+- **Microservices** - Add virus scanning capabilities to distributed applications
 
-## Requirements
+## 📋 Requirements
 
-* Golang 1.19 or higher
+- **Go**: 1.23.0 or higher
+- **ClamAV**: Latest stable version recommended
+- **Docker**: For containerized deployment
+- **Memory**: 4GB+ RAM recommended for production (virus databases require 1.6GB+)
 
-## Getting started
+## 🚀 Quick Start
 
-Prebuilt binaries can be downloaded from the GitHub Releases [section](https://github.com/lescactus/clamav-api-go/releases), or using a Docker image from the Github Container Registry. See [here](https://github.com/lescactus/clamav-api-go#running-with-docker-rooster)
+### Docker Deployment (Recommended)
 
-### Building `clamav-api-go` :cd:
-
-<details>
-
-#### From source with Go
-
-You need a working [go](https://golang.org/doc/install) toolchain (It has been developped and tested with go 1.21 and should work with go >= 1.21). Refer to the official documentation for more information (or from your Linux/Mac/Windows distribution documentation to install it from your favorite package manager).
-
-```bash
-# Clone this repository
-git clone https://github.com/lescactus/clamav-api-go.git && cd clamav-api-go/
-
-# Build from sources. Use the '-o' flag to change the compiled binary name
-go build
-
-# Default compiled binary is clamav-api-go
-# You can optionnaly move it somewhere in your $PATH to access it shell wide
-./clamav-api-go
-```
-
-#### From source with docker
-
-If you don't have [go](https://golang.org/doc/install) installed but have docker, run the following command to build inside a docker container:
+#### Production with Security & Optimization
 
 ```bash
-# Build from sources inside a docker container. Use the '-o' flag to change the compiled binary name
-# Warning: the compiled binary belongs to root:root
-docker run --rm -it -v "$PWD":/app -w /app golang:1.21 go build -buildvcs=false
-
-# Default compiled binary is clamav-api-go
-# You can optionnaly move it somewhere in your $PATH to access it shell wide
-./clamav-api-go
+# Production deployment with optimized configuration and security
+docker compose -f docker-compose.optimized.yaml up -d
 ```
 
-The server is accessible at http://127.0.0.1:8080
-
-#### With Docker
-
-`clamav-api-go` comes with a `Dockerfile`. To build the image:
+#### Development
 
 ```bash
-docker build -t clamav-api .
-
-docker run -d -p 8080:8080 --restart="always" --name clamav-api-go clamav-api-go 
+# Basic development setup
+docker compose up -d
 ```
 
-The server is accessible at http://127.0.0.1:8080
+The API server will be available at <http://127.0.0.1:8888>
 
-</details>
-
-### Running with Docker :rooster:
+### Binary Installation
 
 ```bash
-docker run -d -p 8080:8080 --restart="always" --name clamav-api-go ghcr.io/lescactus/clamav-api-go
+# Download the latest release
+wget https://github.com/lescactus/clamav-api-go/releases/latest/download/clamav-api-go
+
+# Make executable and run
+chmod +x clamav-api-go && ./clamav-api-go
 ```
 
-The server is accessible at http://127.0.0.1:8080
-
-### Running with Docker Compose :cactus:
+### Building from Source
 
 ```bash
-docker compose up
+# Clone and build
+git clone https://github.com/lescactus/clamav-api-go.git
+cd clamav-api-go && go build -o bin/clamav-api-go && ./bin/clamav-api-go
 ```
 
-The server is accessible at http://127.0.0.1:8080
+## 📡 API Endpoints
 
-### Running in Kubernetes :dart:
+### Health & Monitoring
 
-#### With skaffold
+| Method | Endpoint | Description | Authentication |
+|--------|----------|-------------|----------------|
+| `GET` | `/rest/v1/ping` | Health check and ClamAV connectivity | Public |
+| `GET` | `/rest/v1/version` | ClamAV version information | Protected |
+| `GET` | `/rest/v1/stats` | ClamAV daemon statistics | Protected |
+| `GET` | `/rest/v1/versioncommands` | Available ClamAV commands | Protected |
 
-Ensure you have a properly working and accessible Kubernetes cluster with a valid `~/.kube/config`. This project is using [Skaffold](https://skaffold.dev/) v2.2.0 to deploy to a local Kubernetes cluster, such as Minikube or KinD. You can dowload skaffold [here](https://skaffold.dev/docs/install/#standalone-binary). It is assumed that skaffold is installed.
+### Virus Scanning
 
-To deploy to a local Kubernetes cluster, simply run skaffold run:
+| Method | Endpoint | Description | Authentication |
+|--------|----------|-------------|----------------|
+| `POST` | `/rest/v1/scan` | Scan uploaded files for viruses | Protected |
 
-<details>
+### Management Operations
 
-```
-$ skaffold run
-Generating tags...
- - clamav-api -> clamav-api:2023-07-09_01-24-29.9_CEST
-Checking cache...
- - clamav-api: Not found. Building
-Starting build...
-Found [k3d-k3s-default] context, using local docker daemon.
-Building [clamav-api]...
-Target platforms: [linux/amd64]
-#0 building with "default" instance using docker driver
+| Method | Endpoint | Description | Authentication |
+|--------|----------|-------------|----------------|
+| `POST` | `/rest/v1/reload` | Reload ClamAV configuration | Protected |
+| `POST` | `/rest/v1/shutdown` | Shutdown ClamAV daemon | Protected |
+| `POST` | `/rest/v1/freshclam` | Update virus definitions | Protected |
 
-#1 [internal] load build definition from Dockerfile
-#1 transferring dockerfile: 256B done
-#1 DONE 0.0s
+## 🔒 API Authentication
 
-#2 [internal] load .dockerignore
-#2 transferring context: 122B done
-#2 DONE 0.0s
+The ClamAV API supports optional API key authentication for production security. When enabled,
+all protected endpoints require a valid API key in the request header.
 
-#3 [internal] load metadata for docker.io/library/golang:1.21
-#3 DONE 0.0s
+### Configuration
 
-#4 [builder 1/6] FROM docker.io/library/golang:1.21
-#4 DONE 0.0s
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `AUTH_API_KEY` | `""` (disabled) | API key for authentication. If empty, authentication is disabled |
+| `AUTH_API_KEY_HEADER` | `X-API-Key` | Header name for API key authentication |
 
-#5 [internal] load build context
-#5 transferring context: 10.14kB done
-#5 DONE 0.0s
+### Security Features
 
-#6 [builder 2/6] WORKDIR /app
-#6 CACHED
+- **Optional Authentication**: Can be enabled/disabled via configuration
+- **Public Health Endpoints**: Health checks remain accessible without authentication
+- **Secure Key Comparison**: Uses constant-time comparison to prevent timing attacks
+- **Comprehensive Logging**: Failed authentication attempts are logged with client details
+- **Flexible Headers**: Customizable API key header name
 
-#7 [builder 3/6] COPY go.* ./
-#7 CACHED
+### Usage Examples
 
-#8 [builder 4/6] RUN go mod download
-#8 CACHED
+#### Generate Secure API Key
 
-#9 [builder 5/6] COPY . .
-#9 DONE 0.1s
-
-#10 [builder 6/6] RUN CGO_ENABLED=0 go build -ldflags '-d -w -s' -o main
-#10 DONE 6.5s
-
-#11 [stage-1 1/1] COPY --from=builder /app/main /
-#11 CACHED
-
-#12 exporting to image
-#12 exporting layers done
-#12 writing image sha256:c505b5f5ed48c79ec01a85bfb8827e036f211d17296e7b34aa94f9bb5e16a83d done
-#12 naming to docker.io/library/clamav-api:2023-07-09_01-24-29.9_CEST done
-#12 DONE 0.0s
-Build [clamav-api] succeeded
-Starting test...
-Testing images...
-Running custom test command: "go test ./..."
-?   	github.com/lescactus/clamav-api-go	[no test files]
-ok  	github.com/lescactus/clamav-api-go/internal/clamav	(cached)
-?   	github.com/lescactus/clamav-api-go/internal/config	[no test files]
-ok  	github.com/lescactus/clamav-api-go/internal/controllers	(cached)
-ok  	github.com/lescactus/clamav-api-go/internal/logger	(cached)
-Command finished successfully.
-Tags used in deployment:
- - clamav-api -> clamav-api:c505b5f5ed48c79ec01a85bfb8827e036f211d17296e7b34aa94f9bb5e16a83d
-Starting deploy...
-Loading images into k3d cluster nodes...
- - clamav-api:c505b5f5ed48c79ec01a85bfb8827e036f211d17296e7b34aa94f9bb5e16a83d -> Found
-Images loaded in 68.063635ms
- - configmap/clamav created
- - deployment.apps/clamav-api created
- - service/clamav-api created
- - serviceaccount/clamav-api created
-Waiting for deployments to stabilize...
- - deployment/clamav-api: waiting for rollout to finish: 0 of 1 updated replicas are available...
- - deployment/clamav-api is ready.
-Deployments stabilized in 31.094 seconds
-You can also run [skaffold run --tail] to get the logs
+```bash
+# Generate a cryptographically secure API key
+export AUTH_API_KEY=$(openssl rand -hex 32)
+echo "Generated API Key: $AUTH_API_KEY"
 ```
 
-</details>
+#### Making Authenticated Requests
 
-The following happened:
+```bash
+# Health check (always public)
+curl -X GET http://localhost:8888/rest/v1/ping
 
-* Skaffold will generate a docker tag based on the current timestamp.
+# Protected endpoints (require API key)
+curl -X GET \
+  -H "X-API-Key: your-api-key-here" \
+  http://localhost:8888/rest/v1/version
 
-* If the image doesn't exist locally, Skaffold will build it.
-
-* Once the docker image is built, Skaffold will substitute the raw image defined in `deploy/k8s/deployment.yaml` with the image just built.
-
-* Skaffold will apply the manifests in `deploy/k8s/`.
-
-* Skaffold will wait for the `clamav-api` deployment to be ready.
-
-For more informations about Skaffold and what it can do, visit the project [documentation](Without Skaffold).
-
-#### Without Skaffold
-
-To deploy to a Kubernetes cluster without Skaffold, simply build & push the docker image to an external registry. Then change the docker image name to include the registry in the `deploy/k8s/deployment.yaml` manifest.
-
-Note: You can change and customize the `clamd.conf` in `deploy/k8s/configmap.yaml`.
-
-## Specifications :ocean:
-
-`GET /rest/v1/ping` will send the `PING` command to Clamd
-
-`GET /rest/v1/version` will send the `VERSION` command to Clamd
-
-`GET /rest/v1/stats` will send the `STATS` command to Clamd
-
-`GET /rest/v1/versioncommands` will send the `VERSIONCOMMANDs` command to Clamd
-
-`POST /rest/v1/reload` will send the `RELOAD` command to Clamd
-
-`POST /rest/v1/shutdown` will send the `SHUTDOWN` command to Clamd
-
-`POST /rest/v1/scan` (with a form in the request body) will send the `INSTREAM` command to Clamd and stream the form for Clamd to scan. Note: this endpoint expects a `multipart/form-data`. See [Examples](https://github/com/lescactus/clamav-go-api#Examples) below.
-
-## Configuration :deciduous_tree:
-
-`clamav-api-go` is a 12-factor compliant app using [Viper](https://github.com/spf13/viper) as a configuration manager. It can read configuration from either config files or environment variables. Available configuration files are:
-
-* `config.json`
-* `config.yaml`
-* `config.env`
-
-### `config.json`
-
-**Example**
-
-```json
-{
-    "server_addr": ":8080",
-    "server_read_timeout": "30s",
-    "server_read_header_timeout": "10s",
-    "server_write_timeout": "30s",
-    "server_max_request_size": 10485760,
-    "logger_log_level": "debug",
-    "logger_duration_field_unit": "ms",
-    "logger_format": "console",
-    "clamav_addr": "127.0.0.1:3310",
-    "clamav_network": "tcp",
-    "clamav_timeout": "30s",
-    "clamav_keepalive": "30s"
-}
+# File scanning with authentication
+curl -X POST \
+  -H "X-API-Key: your-api-key-here" \
+  -F "file=@suspicious-file.txt" \
+  http://localhost:8888/rest/v1/scan
 ```
 
-### `config.yaml`
+## ⚙️ Configuration
 
-**Example**
+The application uses [Viper](https://github.com/spf13/viper) for 12-factor compliant configuration
+management. Configuration can be provided via environment variables, config files, or command-line
+flags.
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SERVER_ADDR` | `:8888` | Server listening address (host:port) |
+| `SERVER_READ_TIMEOUT` | `30s` | Maximum duration for reading requests |
+| `SERVER_WRITE_TIMEOUT` | `30s` | Maximum duration for writing responses |
+| `SERVER_MAX_REQUEST_SIZE` | `104857600` | Maximum request size in bytes (100MB) |
+| `CLAMAV_ADDR` | `127.0.0.1:3310` | ClamAV daemon address |
+| `CLAMAV_NETWORK` | `tcp` | Network type for ClamAV connection |
+| `CLAMAV_TIMEOUT` | `30s` | ClamAV connection timeout |
+| `LOGGER_LOG_LEVEL` | `info` | Log level (trace, debug, info, warn, error, fatal, panic) |
+| `LOGGER_FORMAT` | `json` | Log format (json or console) |
+| `AUTH_API_KEY` | `""` | API key for authentication (empty = disabled) |
+| `AUTH_API_KEY_HEADER` | `X-API-Key` | Header name for API key |
+
+### Configuration Files
+
+Supported formats: `config.json`, `config.yaml`, `config.env`
+
+#### Example config.yaml
 
 ```yaml
-server_addr: :8080
-server_read_timeout: 30s
-server_read_header_timeout: 10s
-server_write_timeout: 30s
-server_max_request_size: 10485760
-logger_log_level: debug
-logger_duration_field_unit: ms
-logger_format: console
-clamav_addr: 127.0.0.1:3310
-clamav_network: tcp
-clamav_timeout: 30s
-clamav_keepalive: 30s
+server_addr: ":8888"
+server_read_timeout: "30s"
+server_write_timeout: "30s"
+server_max_request_size: 104857600
+clamav_addr: "127.0.0.1:3310"
+clamav_network: "tcp"
+clamav_timeout: "30s"
+logger_log_level: "info"
+logger_format: "json"
+auth_api_key: "your-secure-api-key-here"
+auth_api_key_header: "X-API-Key"
 ```
 
-### `config.env`
+## 🐳 Docker Deployment
 
-**Example**
+### Production Configuration
 
-```
-SERVER_ADDR=:8080
-SERVER_READ_TIMEOUT=30s
-SERVER_READ_HEADER_TIMEOUT=10s
-SERVER_WRITE_TIMEOUT=30s
-SERVER_MAX_REQUEST_SIZE=10485760
-LOGGER_LOG_LEVEL=debug
-LOGGER_DURATION_FIELD_UNIT=s
-LOGGER_FORMAT=console
-CLAMAV_ADDR=127.0.0.1:3310
-CLAMAV_NETWORK=tcp
-CLAMAV_TIMEOUT=30s
-CLAMAV_KEEPALIVE=300s
-```
+The optimized Docker Compose configuration provides enterprise-ready deployment with:
 
+- **Memory Management**: 4GB allocation for ClamAV, 512MB for API gateway
+- **Security Architecture**: ClamAV daemon isolated from external access
+- **Resource Limits**: CPU and memory constraints for stable operation
+- **Health Checks**: Comprehensive service monitoring
+- **Optimized ClamAV**: Enhanced detection capabilities based on Arch Linux recommendations
 
-### From environment variables
+```bash
+# Deploy production stack
+docker compose -f docker-compose.optimized.yaml up -d
 
-It is the same variables as in the `config.env`
+# Monitor services
+docker compose -f docker-compose.optimized.yaml logs -f
 
-| Variable | Default value | Description |
-| :---: | :---: |  --- |
-`SERVER_ADDR` | `:8080` | Define the TCP address for the server to listen on, in the form "host:port"
-`SERVER_READ_TIMEOUT` | `30s` | Maximum duration for the http server to read the entire request, including the body. A zero or negative value means there will be no timeout. 
-`SERVER_READ_HEADER_TIMEOUT` | `10s` | Amount of time the http server allow to read request headers. If the value is zero, the value of `SERVER_READ_TIMEOUT` is used. If both are zero, there is no timeout
-`SERVER_WRITE_TIMEOUT` | `30s` | Maximum duration before the http server times out writes of the response. A zero or negative value means there will be no timeout
-`SERVER_MAX_REQUEST_SIZE` | `10485760` (10MiB) | Maximum size of a client request, including headers and body
-`LOGGER_LOG_LEVEL` | `info` | Log level. Available: `trace`, `debug`, `info`, `warn`, `error`, `fatal` and `panic`. [Ref](https://pkg.go.dev/github.com/rs/zerolog@v1.26.1#pkg-variables)
-`LOGGER_DURATION_FIELD_UNIT` | `ms` | Defines the unit for `time.Duration` type fields in the logger. Available: `ms`, `millisecond`, `s`, `second`
-`LOGGER_FORMAT` | `json` | Format of the logs. Can be either `json` or `console`
-`CLAMAV_ADDR` | `127.0.0.0:3310` | Network address of the Clamav server
-`CLAMAV_NETWORK` | `tcp` | Define the named network of the Clamav server. Example: `tcp`, `tcp4`, `tcp6`, `unix`, etc ... See the [`Dial()`](https://pkg.go.dev/net#Dial) documentation for more details
-`CLAMAV_TIMEOUT` | `30s` | Maximum amount of time a dial to the Clamav server will wait for a connect to complete
-`CLAMAV_KEEPALIVE` | `30s` | Specifies the interval between keep-alive probes for an active connection to the Clamav server. If negative, keep-alive probes are disabled
-
-## Examples :radio:
-
-```
-$ curl 127.0.0.1:8080/rest/v1/ping
-{"ping":"PONG"}
+# Scale API gateway (if needed)
+docker compose -f docker-compose.optimized.yaml up -d --scale clamav-api=3
 ```
 
-```
-$ curl 127.0.0.1:8080/rest/v1/version
-{"clamav_version":"ClamAV 1.0.0/26734/Mon Nov 28 08:17:05 2022"}
+### Development Configuration
+
+```bash
+# Quick development setup
+docker compose up -d
+
+# View logs
+docker compose logs -f clamav-api
 ```
 
-```
-$ curl 127.0.0.1:8080/rest/v1/stats
-{"pools":1,"state":"VALID PRIMARY","threads":"live 1  idle 0 max 10 idle-timeout 30","queue":"0 items\n\tSTATS 0.000179 ","memstats":"heap N/A mmap N/A used N/A free N/A releasable N/A pools 1 pools_used 1260.177M pools_total 1260.222M"} 
-```
+## 📝 Usage Examples
 
-```
-$ curl 127.0.0.1:8080/rest/v1/versioncommands
-{"clamav_version":"ClamAV 1.0.0/26734/Mon Nov 28 08:17:05 2022","commands":["SCAN","QUIT","RELOAD","PING","CONTSCAN","VERSIONCOMMANDS","VERSION","END","SHUTDOWN","MULTISCAN","FILDES","STATS","IDSESSION","INSTREAM","DETSTATSCLEAR","DETSTATS","ALLMATCHSCAN"]}
-```
+### File Scanning
 
-```
-$ curl 127.0.0.1:8080/rest/v1/reload -XPOST
-{"status":"RELOADING"}
-```
+#### Clean File
 
-```
-$ curl 127.0.0.1:8080/rest/v1/shutdown -XPOST
-{"status":"Shutting down"}
-```
+```bash
+curl -X POST \
+  -F "file=@clean-document.pdf" \
+  http://localhost:8888/rest/v1/scan | jq
 
-```
-# Download the EICAR anti malware test file in /tmp/eicar.txt
-$ wget https://secure.eicar.org/eicar.com.txt -O /tmp/eicar.txt
-
-# Generate a 1M file with random content
-$ dd if=/dev/urandom of=/tmp/test.txt bs=1M count=1
-
-$ curl 127.0.0.1:8080/rest/v1/scan -F "file=@/tmp/test.txt" -v | jq ''
-*   Trying 127.0.0.1:8080...
-* Connected to 127.0.0.1 (127.0.0.1) port 8080 (#0)
-> POST /rest/v1/scan HTTP/1.1
-> Host: 127.0.0.1:8080
-> User-Agent: curl/7.81.0
-> Accept: */*
-> Content-Length: 1048762
-> Content-Type: multipart/form-data; boundary=------------------------b6b6ef4a0ac767d7
-> Expect: 100-continue
-> 
-* Mark bundle as not supporting multiuse
-< HTTP/1.1 100 Continue
-* We are completely uploaded and fine
-* Mark bundle as not supporting multiuse
-< HTTP/1.1 200 OK
-< Content-Type: application/json
-< X-Request-Id: cikv9kqrnmmc73e13940
-< Date: Sat, 08 Jul 2023 23:44:19 GMT
-< Content-Length: 74
-< 
-* Connection #0 to host 127.0.0.1 left intact
+# Response
 {
   "status": "noerror",
   "msg": "stream: OK",
   "signature": "",
   "virus_found": false
 }
+```
 
-$ curl 127.0.0.1:8080/rest/v1/scan -F "file=@/tmp/eicar.txt" -v | jq ''
-*   Trying 127.0.0.1:8080...
-* Connected to 127.0.0.1 (127.0.0.1) port 8080 (#0)
-> POST /rest/v1/scan HTTP/1.1
-> Host: 127.0.0.1:8080
-> User-Agent: curl/7.81.0
-> Accept: */*
-> Content-Length: 255
-> Content-Type: multipart/form-data; boundary=------------------------2c5ea3b07f1f700d
-> 
-* We are completely uploaded and fine
-* Mark bundle as not supporting multiuse
-< HTTP/1.1 200 OK
-< Content-Type: application/json
-< X-Request-Id: cikv9oirnmmc73e1394g
-< Date: Sat, 08 Jul 2023 23:44:34 GMT
-< Content-Length: 110
-< 
-* Connection #0 to host 127.0.0.1 left intact
+#### Infected File (EICAR Test)
+
+```bash
+curl -X POST \
+  -F "file=@eicar.txt" \
+  http://localhost:8888/rest/v1/scan | jq
+
+# Response
 {
   "status": "error",
-  "msg": "file contains potential virus",
+  "msg": "stream: Win.Test.EICAR_HDB-1 FOUND",
   "signature": "Win.Test.EICAR_HDB-1",
   "virus_found": true
 }
 ```
 
-## Development
+### System Information
 
-### Live reloading with air
-
-Use [air](https://github.com/cosmtrek/air) for live code reloading:
-
-```
-# Install air
-$ go install github.com/cosmtrek/air@latest
-
-$ air
-  __    _   ___  
- / /\  | | | |_) 
-/_/--\ |_| |_| \_ , built with Go 
-
-watching .
-watching deploy
-watching deploy/k8s
-watching dist
-watching dist/clamav-api-go_darwin_amd64_v1
-watching dist/clamav-api-go_darwin_arm64
-watching dist/clamav-api-go_linux_386
-watching dist/clamav-api-go_linux_amd64_v1
-watching dist/clamav-api-go_linux_arm64
-watching dist/clamav-api-go_windows_386
-watching dist/clamav-api-go_windows_amd64_v1
-watching dist/clamav-api-go_windows_arm64
-watching internal
-watching internal/clamav
-watching internal/config
-watching internal/controllers
-watching internal/logger
-!exclude tmp
-building...
-running...
-main.go has changed
-building...
-main.go has changed
-running...
-```
-
-### Use Skaffold with Kubernetes
-
-Use `skaffold dev` with a local k8s cluster, such as `minikube`, `k3d` or `kind`:
+#### Health Check
 
 ```bash
-# Example with k3d
-# Create a local k8s cluster
-$ k3d cluster create
+curl http://localhost:8888/rest/v1/ping | jq
 
-# Run skaffold in dev mode, with live reloading, log tailing and port-forwarding
-$ skaffold dev --tail --port-forward
-Generating tags...
- - clamav-api -> clamav-api:2023-07-09_12-17-11.852_CEST
-Checking cache...
- - clamav-api: Not found. Building
-Starting build...
-Found [k3d-k3s-default] context, using local docker daemon.
-Building [clamav-api]...
-Target platforms: [linux/amd64]
-...
-Build [clamav-api] succeeded
-Starting test...
-Testing images...
-Running custom test command: "go test ./..."
-?   	github.com/lescactus/clamav-api-go	[no test files]
-ok  	github.com/lescactus/clamav-api-go/internal/clamav	(cached)
-?   	github.com/lescactus/clamav-api-go/internal/config	[no test files]
-ok  	github.com/lescactus/clamav-api-go/internal/controllers	(cached)
-ok  	github.com/lescactus/clamav-api-go/internal/logger	(cached)
-Command finished successfully.
-Tags used in deployment:
- - clamav-api -> clamav-api:c505b5f5ed48c79ec01a85bfb8827e036f211d17296e7b34aa94f9bb5e16a83d
-Starting deploy...
-Loading images into k3d cluster nodes...
- - clamav-api:c505b5f5ed48c79ec01a85bfb8827e036f211d17296e7b34aa94f9bb5e16a83d -> Found
-Images loaded in 69.747973ms
- - configmap/clamav created
- - deployment.apps/clamav-api created
- - service/clamav-api created
- - serviceaccount/clamav-api created
-Waiting for deployments to stabilize...
- - deployment/clamav-api: waiting for rollout to finish: 0 of 1 updated replicas are available...
- - deployment/clamav-api is ready.
-Deployments stabilized in 31.091 seconds
-Port forwarding service/clamav-api in namespace default, remote port 80 -> http://127.0.0.1:8080
-Listing files to watch...
- - clamav-api
-Press Ctrl+C to exit
-Watching for changes...
-[clamav-api] {"level":"error","svc":"clamav-api-go","req_id":"cil8ifirnmmc73a3q740","time":"2023-07-09T10:17:34Z","message":"error while sending ping command: dial tcp 127.0.0.0:3310: connect: connection refused"}
-[clamav-api] {"level":"info","svc":"clamav-api-go","remote_client":"10.42.0.1:45986","user_agent":"kube-probe/1.26","req_id":"cil8ifirnmmc73a3q740","method":"GET","url":"/rest/v1/ping","status":502,"size":83,"duration":0.204641,"time":"2023-07-09T10:17:34Z"}
-[clamav-api] {"level":"debug","svc":"clamav-api-go","req_id":"cil8ijarnmmc73a3q74g","time":"2023-07-09T10:17:49Z","message":"ping command sent successfully"}
-[clamav-api] {"level":"info","svc":"clamav-api-go","remote_client":"10.42.0.1:42870","user_agent":"kube-probe/1.26","req_id":"cil8ijarnmmc73a3q74g","method":"GET","url":"/rest/v1/ping","status":200,"size":15,"duration":0.511549,"time":"2023-07-09T10:17:49Z"}
-[clamav-api] {"level":"debug","svc":"clamav-api-go","req_id":"cil8ijarnmmc73a3q750","time":"2023-07-09T10:17:49Z","message":"ping command sent successfully"}
-[clamav-api] {"level":"info","svc":"clamav-api-go","remote_client":"10.42.0.1:42876","user_agent":"kube-probe/1.26","req_id":"cil8ijarnmmc73a3q750","method":"GET","url":"/rest/v1/ping","status":200,"size":15,"duration":0.375841,"time":"2023-07-09T10:17:49Z"}
-[clamav] Starting Freshclamd
-[clamav] Starting ClamAV
-Socket for clamd not found yet, retrying (0/1800) ...ClamAV update process started at Sun Jul  9 10:17:19 2023
-...
-[clamav] Sun Jul  9 10:17:36 2023 -> Set stacksize to 1048576
-[clamav] socket found, clamd started.
-[clamav-api] {"level":"debug","svc":"clamav-api-go","req_id":"cil8ilirnmmc73a3q75g","file_name":"test.txt","file_size":1048576,"time":"2023-07-09T10:17:58Z","message":"multipart file read successfully"}
-[clamav-api] {"level":"debug","svc":"clamav-api-go","req_id":"cil8ilirnmmc73a3q75g","time":"2023-07-09T10:17:58Z","message":"file scanned successfully"}
-[clamav-api] {"level":"info","svc":"clamav-api-go","remote_client":"127.0.0.1:44044","user_agent":"curl/7.81.0","req_id":"cil8ilirnmmc73a3q75g","method":"POST","url":"/rest/v1/scan","status":200,"size":74,"duration":61.101685,"time":"2023-07-09T10:17:58Z"}
-[clamav-api] {"level":"debug","svc":"clamav-api-go","req_id":"cil8ilqrnmmc73a3q760","time":"2023-07-09T10:17:59Z","message":"ping command sent successfully"}
-[clamav-api] {"level":"info","svc":"clamav-api-go","remote_client":"10.42.0.1:44084","user_agent":"kube-probe/1.26","req_id":"cil8ilqrnmmc73a3q760","method":"GET","url":"/rest/v1/ping","status":200,"size":15,"duration":0.522211,"time":"2023-07-09T10:17:59Z"}
-[clamav-api] {"level":"debug","svc":"clamav-api-go","req_id":"cil8ioarnmmc73a3q76g","time":"2023-07-09T10:18:09Z","message":"ping command sent successfully"}
-[clamav-api] {"level":"info","svc":"clamav-api-go","remote_client":"10.42.0.1:56626","user_agent":"kube-probe/1.26","req_id":"cil8ioarnmmc73a3q76g","method":"GET","url":"/rest/v1/ping","status":200,"size":15,"duration":0.373957,"time":"2023-07-09T10:18:09Z"}
+# Response
+{
+  "ping": "PONG"
+}
 ```
 
-
-### Unit tests
-
-To run the test suite, run the following commands:
+#### ClamAV Statistics
 
 ```bash
-# Run the unit tests. Remove the '-v' flag to reduce verbosity
-go test -v ./... 
+curl -H "X-API-Key: your-api-key" \
+  http://localhost:8888/rest/v1/stats | jq
 
-# Get coverage to html format
-go test -coverprofile /tmp/cover.out ./... -v
-go tool cover -html=/tmp/cover.out
+# Response
+{
+  "stats": "POOLS: 1\nSTATE: VALID PRIMARY\nTHREADS: live 1  idle 0 max 12 idle-timeout 30\n..."
+}
 ```
 
-### End to End tests
-
-This project uses [`ovh/venom`](https://github.com/ovh/venom) to run a e2e test suite against all the endpoints. Refer to the [documentation](https://github.com/ovh/venom#installing) to install the cli.
+### Virus Definition Updates
 
 ```bash
-# Optionnaly, start docker compose
+curl -X POST \
+  -H "X-API-Key: your-api-key" \
+  http://localhost:8888/rest/v1/freshclam | jq
+
+# Response
+{
+  "status": "success",
+  "message": "Virus definitions updated successfully",
+  "timestamp": "2025-08-06T10:30:00Z",
+  "output": "ClamAV update process started at Tue Aug  6 10:30:00 2025\n..."
+}
+```
+
+## 🛠️ Development
+
+### Prerequisites
+
+- Go 1.23.0+
+- ClamAV daemon running on localhost:3310
+- Make (optional, for build automation)
+
+### Local Development
+
+```bash
+# Clone repository
+git clone https://github.com/lescactus/clamav-api-go.git
+cd clamav-api-go
+
+# Install dependencies
+go mod download
+
+# Run tests
+make test
+
+# Build and run
+make build && ./bin/clamav-api-go
+```
+
+### Testing
+
+#### Unit Tests
+
+```bash
+# Run all unit tests
+go test -v ./...
+
+# Run with coverage
+go test -v -cover -coverprofile=coverage.out ./...
+
+# View coverage report
+go tool cover -html=coverage.out
+```
+
+#### End-to-End Tests
+
+```bash
+# Start services
 docker compose up -d --wait
 
-# Execute the test suite against http://127.0.0.1:8080
+# Run E2E tests with Venom
 venom run -vv e2e/venom.e2e.yaml
 
-# To override the default "http://127.0.0.1:8080" protocol://host:port, pass the "--var" flag
-# to the venom cli:
-venom run -vv --var=baseuri=https://clamav.api.com:443  e2e/venom.e2e.yaml
+# Custom target
+venom run -vv --var=baseuri=https://api.example.com e2e/venom.e2e.yaml
 ```
+
+### Build Targets
+
+```bash
+# Available make targets
+make help
+
+# Common operations
+make build          # Build binary
+make test           # Run tests
+make lint           # Run linters
+make docker-build   # Build Docker image
+make clean          # Clean build artifacts
+```
+
+## 🚢 Production Deployment
+
+### Memory Requirements
+
+Based on Arch Linux ClamAV recommendations:
+
+- **ClamAV Daemon**: 1.6GB+ for virus definitions, 3.2GB peak during updates
+- **API Gateway**: 256MB-512MB for Go application
+- **Total Recommended**: 4GB+ RAM for stable production operation
+
+### Security Best Practices
+
+1. **Enable API Key Authentication**
+
+   ```bash
+   export AUTH_API_KEY=$(openssl rand -hex 32)
+   ```
+
+2. **Use HTTPS in Production**
+
+   ```bash
+   # Deploy behind reverse proxy (nginx, Caddy, etc.)
+   # Configure TLS termination and rate limiting
+   ```
+
+3. **Resource Limits**
+
+   ```yaml
+   # Docker Compose resource constraints
+   deploy:
+     resources:
+       limits:
+         memory: 4G
+         cpus: '2.0'
+   ```
+
+4. **Network Security**
+
+   ```yaml
+   # Isolate ClamAV daemon from external access
+   expose:
+     - "3310"  # Internal only, not ports
+   ```
+
+### Monitoring & Observability
+
+#### Health Checks
+
+```bash
+# Kubernetes readiness probe
+curl -f http://localhost:8888/rest/v1/ping || exit 1
+
+# Docker health check
+curl --fail http://localhost:8888/rest/v1/ping
+```
+
+#### Metrics Collection
+
+```bash
+# Prometheus metrics endpoint (if enabled)
+curl http://localhost:8888/metrics
+
+# Structured logs for analysis
+docker logs clamav-api-gateway | jq '.level="error"'
+```
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
+
+### Development Workflow
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes with tests
+4. Run the test suite (`make test`)
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
+
+### Code Standards
+
+- Follow Go conventions and `gofmt` formatting
+- Add unit tests for new functionality
+- Update documentation for API changes
+- Use conventional commit messages
+
+## 📚 Documentation
+
+- [API Authentication Guide](docs/API_AUTHENTICATION.md)
+- [Security Policy](.github/SECURITY.md)
+- [ClamAV Protocol Reference](http://linux.die.net/man/8/clamd)
+- [Docker Deployment Guide](docs/DOCKER_DEPLOYMENT.md)
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [ClamAV Project](https://www.clamav.net/) for the excellent antivirus engine
+- [Arch Linux ClamAV Wiki](https://wiki.archlinux.org/title/ClamAV) for optimization recommendations
+- Go community for amazing libraries and tools
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/lescactus/clamav-api-go/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/lescactus/clamav-api-go/discussions)
+- **Security**: See [SECURITY.md](.github/SECURITY.md) for reporting vulnerabilities
+
+---
+
+Built with ❤️ using Go and ClamAV

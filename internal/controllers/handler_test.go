@@ -141,6 +141,27 @@ func (m *MockClamav) InStream(ctx context.Context, _ io.Reader, _ int64) ([]byte
 	}
 }
 
+func (m *MockClamav) FreshClam(ctx context.Context) ([]byte, error) {
+	scenario := ctx.Value(MockScenario(""))
+
+	switch scenario {
+	case ScenarioNoError:
+		return []byte("Database updated successfully"), nil
+	case ScenarioNetError:
+		return []byte("network error"), &net.OpError{Err: errors.New("network error")}
+	case ScenarioErrUnknownCommand:
+		return []byte("ERROR: Command not found"), clamav.ErrUnknownCommand
+	case ScenarioErrUnknownResponse:
+		return []byte("ERROR: Unknown response"), clamav.ErrUnknownResponse
+	case ScenarioErrUnexpectedResponse:
+		return []byte("ERROR: Unexpected response"), clamav.ErrUnexpectedResponse
+	case ScenarioErrScanFileSizeLimitExceeded:
+		return []byte("ERROR: Size limit exceeded"), clamav.ErrScanFileSizeLimitExceeded
+	default:
+		return nil, dispatchErrFromScenario(scenario.(MockScenario))
+	}
+}
+
 func dispatchErrFromScenario(scenario MockScenario) error {
 	switch scenario {
 	case ScenarioNetError:

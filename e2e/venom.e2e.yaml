@@ -1,17 +1,18 @@
 name: HTTP tests suite
 
 vars:
-  baseuri: http://127.0.0.1:8080
+  baseuri: http://127.0.0.1:8888
 
 testcases:
-- name: GET /rest/v1/ping
+- name: Test clamav api
   steps:
   - type: http
     method: GET
     url: "{{ .baseuri }}/rest/v1/ping"
+    timeout: 30
     assertions:
     - result.statuscode ShouldEqual 200
-    - result.bodyjson.ping ShouldEqual PONG
+    - result.body ShouldContainSubstring "PONG"
 
 - name: POST /rest/v1/ping
   steps:

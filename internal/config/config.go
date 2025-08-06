@@ -24,7 +24,7 @@ const (
 )
 
 var (
-	defaultServerAddr              = ":8080"
+	defaultServerAddr              = ":8888"
 	defaultServerReadTimeout       = 30 * time.Second
 	defaultServerReadHeaderTimeout = 10 * time.Second
 	defaultServerWriteTimeout      = 30 * time.Second
@@ -38,6 +38,9 @@ var (
 	defaultClamavNetwork   = "tcp"
 	defaultClamavTimeout   = 30 * time.Second
 	defaultClamavKeepAlive = 30 * time.Second
+
+	defaultAuthAPIKey       = ""          // Empty by default (authentication disabled)
+	defaultAuthAPIKeyHeader = "X-API-Key" // Standard API key header
 )
 
 // App holds the complete application configuration.
@@ -80,6 +83,12 @@ type App struct {
 
 	// Interval between keep-alive probes for an active connection to the Clamav server
 	ClamavKeepAlive time.Duration `json:"clamav_keepalive" yaml:"clamav_keepalive" mapstructure:"CLAMAV_KEEPALIVE"`
+
+	// Optional API Key for authentication (if empty, authentication is disabled)
+	AuthAPIKey string `json:"auth_api_key" yaml:"auth_api_key" mapstructure:"AUTH_API_KEY"`
+
+	// Header name for API key authentication
+	AuthAPIKeyHeader string `json:"auth_api_key_header" yaml:"auth_api_key_header" mapstructure:"AUTH_API_KEY_HEADER"`
 }
 
 // New will retrieve the runtime configuration from either
@@ -179,4 +188,7 @@ func (config *App) setDefaults() {
 	config.ClamavNetwork = defaultClamavNetwork
 	config.ClamavTimeout = defaultClamavTimeout
 	config.ClamavKeepAlive = defaultClamavKeepAlive
+
+	config.AuthAPIKey = defaultAuthAPIKey
+	config.AuthAPIKeyHeader = defaultAuthAPIKeyHeader
 }

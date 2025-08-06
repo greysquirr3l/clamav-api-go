@@ -12,6 +12,8 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os/exec"
+	"strings"
 	"time"
 )
 
@@ -25,6 +27,7 @@ type Clamaver interface {
 	VersionCommands(ctx context.Context) ([]byte, error)
 	Shutdown(ctx context.Context) error
 	InStream(ctx context.Context, r io.Reader, size int64) ([]byte, error)
+	FreshClam(ctx context.Context) ([]byte, error)
 }
 
 // Client implements the Clamaver interface and provides
@@ -317,4 +320,36 @@ func (c *Client) parseResponse(msg []byte) error {
 	}
 
 	return nil
+}
+
+// FreshClam executes the freshclam command to update virus definitions.
+// This method runs freshclam as a separate process since it's not available
+// through the ClamAV TCP protocol. It captures both stdout and stderr
+// and returns the combined output.
+func (c *Client) FreshClam(ctx context.Context) ([]byte, error) {
+	// Create the freshclam command with context for cancellation
+	cmd := exec.CommandContext(ctx, "freshclam", "--verbose", "--stdout")
+
+	// Capture both stdout and stderr for comprehensive output
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		// Check if it's a context cancellation
+		if ctx.Err() != nil {
+			return nil, fmt.Errorf("freshclam command cancelled: %w", ctx.Err())
+		}
+
+		// FreshClam may return non-zero exit codes for warnings (e.g., already up to date)
+		// Check if the output contains success indicators
+		outputStr := string(output)
+		if strings.Contains(outputStr, "Database updated") ||
+			strings.Contains(outputStr, "up to date") ||
+			strings.Contains(outputStr, "Your ClamAV installation is OUTDATED") {
+			// These are considered successful outcomes
+			return output, nil
+		}
+
+		return output, fmt.Errorf("freshclam command failed: %w", err)
+	}
+
+	return output, nil
 }

@@ -1,5 +1,5 @@
 # =============================================================================
-# PROJECT-SPECIFIC IGNORES (existing)
+# PROJECT-SPECIFIC IGNORES 
 # =============================================================================
 .vscode/
 tmp/
@@ -9,6 +9,13 @@ clamav-api-go
 config.*
 venom*.log
 venom*.dump.json
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# GitHub directories (keeping your preferences)
 .github/workflows/*
 .github/dependabot/*
 .github/actions/*
@@ -16,16 +23,34 @@ venom*.dump.json
 .github/ISSUE_TEMPLATE/*
 .github/copilot-instructions.md
 .github/dependabot.yml
-.github/prompts/*
+
+# Documentation (keeping your preferences)
 docs/dev/*.md
 docs/dev/*.json
 docs/dev/*.yaml
+
+# Deployment configurations (keeping your preferences)
 deploy/*
+
+# Project directories and files (keeping your preferences)
 reference/*
 scripts/*
 .air.toml
-tmp/
 .goreleaser.yaml
+
+# Specific docs you want ignored
+docs/ARCH_LINUX_OPTIMIZATIONS.md
+docs/IMPLEMENTATION_SUMMARY.md
+docs/OPTIMIZED_CONFIGURATION.md
+
+# Development tools config (keeping your preferences)
+skaffold.yaml
+.markdownlint.json
+.yamllint.yml
+.pre-commit-config.yaml
+
+# Docker compose override (keeping your preference)
+docker-compose.optimized.yaml
 
 # =============================================================================
 # GO LANGUAGE SPECIFIC
@@ -50,7 +75,7 @@ target/
 go.work
 go.work.sum
 
-# Go modules
+# Go modules (vendor directory if using vendoring)
 vendor/
 
 # Test binary, built with `go test -c`
@@ -72,12 +97,9 @@ coverage.xml
 # Delve debugger
 __debug_bin*
 
-# Go workspace
-go.work.sum
-
-# Air live reload tool
-.air.toml
-tmp/
+# Air live reload tool (removed duplicate)
+# .air.toml (already specified in project-specific section)
+# tmp/ (already specified in project-specific section)
 
 # GoLand/IntelliJ
 .idea/
@@ -115,10 +137,6 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
-
-# macOS Finder
-.fseventsd
-.Spotlight-V100
 
 # macOS system files
 .localized
@@ -282,8 +300,8 @@ venv/
 # CONTAINERIZATION
 # =============================================================================
 
-# Docker
-.dockerignore
+# Docker (note: .dockerignore is typically committed)
+# .dockerignore
 
 # =============================================================================
 # DOCUMENTATION & ASSETS
@@ -313,3 +331,5 @@ docs/site/
 # Backup files
 *.bak
 *.backup
+
+# =============================================================================

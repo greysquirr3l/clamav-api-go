@@ -3,11 +3,15 @@ services:
     build:
       context: .
     ports:
-      - 8080:8080
+      - 8888:8888
     environment:
       - LOGGER_LOG_LEVEL=debug
       - LOGGER_FORMAT=console
       - CLAMAV_ADDR=clamav:3310
+      # Optional API Key Authentication
+      # Uncomment and set to enable authentication for protected endpoints
+      # - AUTH_API_KEY=your-secure-api-key-here
+      # - AUTH_API_KEY_HEADER=X-API-Key  # Optional: default is X-API-Key
     depends_on:
      - clamav
   clamav:

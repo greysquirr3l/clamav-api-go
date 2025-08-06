@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestHandlerReload(t *testing.T) {
+func TestHandlerFreshClam(t *testing.T) {
 	logger := zerolog.New(io.Discard)
 	mockClamav := &MockClamav{}
 
@@ -34,7 +34,7 @@ func TestHandlerReload(t *testing.T) {
 			},
 			want: want{
 				status: http.StatusOK,
-				body:   []byte(`{"status":"Reloading"}`),
+				body:   []byte(`{"status":"success","message":"virus definitions updated successfully","output":"Database updated successfully"}`),
 			},
 		},
 		{
@@ -43,8 +43,8 @@ func TestHandlerReload(t *testing.T) {
 				scenario: ScenarioNetError,
 			},
 			want: want{
-				status: http.StatusBadGateway,
-				body:   []byte(`{"status":"error","msg":"something wrong happened while communicating with clamav"}`),
+				status: http.StatusInternalServerError,
+				body:   []byte(`{"status":"error","message":"freshclam update failed","output":"network error"}`),
 			},
 		},
 		{
@@ -54,7 +54,7 @@ func TestHandlerReload(t *testing.T) {
 			},
 			want: want{
 				status: http.StatusInternalServerError,
-				body:   []byte(`{"status":"error","msg":"unknown command sent to clamav"}`),
+				body:   []byte(`{"status":"error","message":"freshclam update failed","output":"ERROR: Command not found"}`),
 			},
 		},
 		{
@@ -64,7 +64,7 @@ func TestHandlerReload(t *testing.T) {
 			},
 			want: want{
 				status: http.StatusInternalServerError,
-				body:   []byte(`{"status":"error","msg":"unknown response from clamav"}`),
+				body:   []byte(`{"status":"error","message":"freshclam update failed","output":"ERROR: Unknown response"}`),
 			},
 		},
 		{
@@ -74,7 +74,7 @@ func TestHandlerReload(t *testing.T) {
 			},
 			want: want{
 				status: http.StatusInternalServerError,
-				body:   []byte(`{"status":"error","msg":"unexpected response from clamav"}`),
+				body:   []byte(`{"status":"error","message":"freshclam update failed","output":"ERROR: Unexpected response"}`),
 			},
 		},
 		{
@@ -84,7 +84,7 @@ func TestHandlerReload(t *testing.T) {
 			},
 			want: want{
 				status: http.StatusInternalServerError,
-				body:   []byte(`{"status":"error","msg":"clamav: size limit exceeded"}`),
+				body:   []byte(`{"status":"error","message":"freshclam update failed","output":"ERROR: Size limit exceeded"}`),
 			},
 		},
 	}
@@ -92,10 +92,10 @@ func TestHandlerReload(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			h := NewHandler(&logger, mockClamav)
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(h.Reload)
+			handler := http.HandlerFunc(h.FreshClam)
 
 			ctx := context.WithValue(context.Background(), MockScenario(""), tt.args.scenario)
-			req, err := http.NewRequestWithContext(ctx, "POST", "/rest/v1/reload", nil)
+			req, err := http.NewRequestWithContext(ctx, "POST", "/rest/v1/freshclam", nil)
 			if err != nil {
 				t.Fatal(err)
 			}

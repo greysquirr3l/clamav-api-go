@@ -74,6 +74,16 @@ func main() {
 	c = c.Append(hlog.RequestIDHandler("req_id", "X-Request-ID"))
 	c = c.Append(controllers.MaxReqSize(cfg.ServerMaxRequestSize))
 
+	// Add optional API key authentication
+	// If AUTH_API_KEY is set, authentication is enabled for protected endpoints
+	// Public endpoints like /ping remain accessible without authentication
+	if cfg.AuthAPIKey != "" {
+		logger.Info().Msg("API key authentication enabled")
+		c = c.Append(controllers.ConditionalAPIKeyAuth(cfg.AuthAPIKey, cfg.AuthAPIKeyHeader))
+	} else {
+		logger.Info().Msg("API key authentication disabled")
+	}
+
 	r.Handler(http.MethodGet, "/rest/v1/ping", c.ThenFunc(h.Ping))
 	r.Handler(http.MethodGet, "/rest/v1/version", c.ThenFunc(h.Version))
 	r.Handler(http.MethodGet, "/rest/v1/stats", c.ThenFunc(h.Stats))
@@ -81,6 +91,7 @@ func main() {
 	r.Handler(http.MethodPost, "/rest/v1/reload", c.ThenFunc(h.Reload))
 	r.Handler(http.MethodPost, "/rest/v1/shutdown", c.ThenFunc(h.Shutdown))
 	r.Handler(http.MethodPost, "/rest/v1/scan", c.ThenFunc(h.InStream))
+	r.Handler(http.MethodPost, "/rest/v1/freshclam", c.ThenFunc(h.FreshClam))
 
 	// Start server
 	go func() {

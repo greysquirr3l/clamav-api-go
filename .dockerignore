@@ -1,12 +1,267 @@
-Dockerfile
+# .dockerignore for ClamAV API Go
+# This file excludes unnecessary files and directories from Docker build context
+# to improve build performance, reduce image size, and enhance security.
+
+# ==========================================
+# Git and Version Control
+# ==========================================
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# ==========================================
+# Documentation and Metadata
+# ==========================================
+README.md
+*.md
+docs/
+CHANGELOG*
+LICENSE*
+CONTRIBUTING*
+AUTHORS*
+
+# ==========================================
+# Build Artifacts and Binaries
+# ==========================================
+bin/
+build/
+dist/
+tmp/
 main
 clamav-api-go
-tmp/
+clamav-api
+*.exe
+*.dll
+*.so
+*.dylib
+
+# ==========================================
+# Go Specific Exclusions
+# ==========================================
+# Test files (rebuilt in container if needed)
+*_test.go
+test/
+tests/
+coverage.out
+coverage.html
+*.test
+.coverage/
+
+# Vendor directory (modules downloaded in container)
+vendor/
+
+# ==========================================
+# Development Tools and Configuration
+# ==========================================
+Makefile
+.air.toml
+air.log
+.golangci.yml
+.golangci.yaml
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.sublime-*
+*.sublime-workspace
+*.sublime-project
+
+# ==========================================
+# Environment and Configuration Files
+# ==========================================
+.env
+.env.*
+*.env
+config.local.*
+secrets/
+
+# ==========================================
+# Deployment and Infrastructure
+# ==========================================
+# Docker files (keep only main Dockerfile)
+docker-compose*.yml
+docker-compose*.yaml
+Dockerfile.*
+!Dockerfile
+
+# Kubernetes and deployment
+k8s/
+kubernetes/
 deploy/
-LICENSE
+deployment/
 skaffold.yaml
-# All dotfiles
-.*
+helm/
+
+# CI/CD configuration
+.circleci/
+.travis.yml
+.gitlab-ci.yml
+azure-pipelines.yml
+.github/workflows/
+.github/actions/
+
+# ==========================================
+# Testing and E2E
+# ==========================================
+e2e/
 venom*.log
 venom*.dump.json
-e2e/
+
+# ==========================================
+# OS and System Files
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ==========================================
+# Temporary and Cache Files
+# ==========================================
+*.tmp
+*.temp
+*.log
+*.pid
+.cache/
+.npm/
+.yarn/
+
+# ==========================================
+# Backup and Archive Files
+# ==========================================
+*.bak
+*.backup
+*.old
+*.orig
+*.tar
+*.tar.gz
+*.zip
+*.rar
+*.7z
+
+# ==========================================
+# Security Sensitive Files
+# ==========================================
+*.pem
+*.key
+*.crt
+*.cert
+*.p12
+*.pfx
+certs/
+certificates/
+
+# ==========================================
+# Development Dependencies
+# ==========================================
+# Node.js (if any frontend tools)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Python (if any scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+.pytest_cache/
+
+# ==========================================
+# Database and Data Files
+# ==========================================
+*.db
+*.sqlite
+*.sqlite3
+
+# ==========================================
+# Performance and Profiling
+# ==========================================
+*.prof
+*.pprof
+cpu.prof
+mem.prof
+trace.out
+bench.txt
+benchmark.txt
+
+# ==========================================
+# Reference and Example Files
+# ==========================================
+examples/
+samples/
+demo/
+reference/
+refs/
+
+# ==========================================
+# Static Analysis and Security Scanning
+# ==========================================
+.trivyignore
+trivy-results.json
+snyk-results.json
+staticcheck.out
+golint.out
+govet.out
+
+# ==========================================
+# Infrastructure as Code
+# ==========================================
+*.tf
+*.tfstate
+*.tfstate.backup
+.terraform/
+terraform.tfvars*
+Vagrantfile
+.vagrant/
+
+# ==========================================
+# Local Development Overrides
+# ==========================================
+docker-compose.override.yml
+docker-compose.local.yml
+.env.local
+config.local.json
+local/
+.local/
+
+# ==========================================
+# Monitoring and Observability
+# ==========================================
+prometheus/
+grafana/
+monitoring/
+
+# ==========================================
+# Generated and API Documentation
+# ==========================================
+swagger.json
+swagger.yaml
+api.json
+*.pb.go
+
+# ==========================================
+# Scripts and Utilities
+# ==========================================
+scripts/setup*
+scripts/dev*
+scripts/local*
+install.sh
+setup.sh
+
+# ==========================================
+# All Hidden Files (with specific exceptions)
+# ==========================================
+.*
+# But keep essential files if needed
+!.dockerignore
